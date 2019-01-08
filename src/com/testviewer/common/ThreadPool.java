@@ -1,0 +1,67 @@
+package com.testviewer.common;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+public class ThreadPool implements Runnable{
+    static final long TICK_TIME = 10;
+    private ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(100);
+    private ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(2, 5,
+            600, TimeUnit.SECONDS, workQueue);
+
+    private ArrayList<TickFuncInfo> tickFuncList = new ArrayList<TickFuncInfo>();
+
+    public ThreadPool()
+    {
+        poolExecutor.execute(this);
+    }
+
+    public void registTick(Method method, Object obj)
+    {
+        tickFuncList.add(new TickFuncInfo(method, obj));
+    }
+
+    public void registTask(Runnable runnable) throws InterruptedException {
+        poolExecutor.execute(runnable);
+    }
+
+    @Override
+    public void run() {
+        while (true)
+        {
+            long timeStart = System.currentTimeMillis();
+            for (TickFuncInfo funcInfo : tickFuncList) {
+                try {
+                    funcInfo.method.invoke(funcInfo.obj, null);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            long timeEnd = System.currentTimeMillis();
+            long timeCost = timeEnd - timeStart;
+
+            if (timeCost < TICK_TIME)
+            {
+                try {
+                    Thread.sleep(TICK_TIME - timeCost);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }//end run
+}
+
+class TickFuncInfo
+{
+    public Method method;
+    public Object obj;
+    public TickFuncInfo(Method method, Object obj)
+    {
+        this.method = method;
+        this.obj = obj;
+    }
+}

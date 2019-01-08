@@ -1,0 +1,12 @@
+<Testsuit>
+    <Testcase>
+        <testScriptPath></testScriptPath>
+        <testRunLog></testRunLog>
+        <runCmd>python %s</runCmd>
+        <runTimes>1</runTimes>
+        <isFailStop>false</isFailStop>
+        <runTimeout>600</runTimeout>
+        <passCheckPattern>Success!</passCheckPattern>
+        <curStatus>IDLE</curStatus>
+    </Testcase>
+</Testsuit>

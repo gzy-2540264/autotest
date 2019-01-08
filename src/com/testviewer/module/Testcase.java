@@ -1,0 +1,117 @@
+package com.testviewer.module;
+
+import java.io.File;
+
+public class Testcase {
+    private String testScriptPath = null;  //脚本路径
+    private String testRunLogPath = null;      //脚本执行日志存放目录
+    private String runCmd = null;          //脚本运行命令
+    private int runTimes = 0;               //脚本运行次数
+    private boolean isFailStop = false;     //失败后是否继续执行
+    private int runTimeout = 60 * 10;       //脚本执行超时时间
+    private String passCheckPattern = null; //脚本执行成功日志样式
+    private TESTCASE_STATUS curStatus = TESTCASE_STATUS.IDLE;  //脚本当前状态
+
+    public enum TESTCASE_STATUS{
+        IDLE, PASSED, FAILED, ERROR, RUNNING, BREAK;
+    }
+
+    public Testcase()
+    {}
+
+    public Testcase(String testScriptPath, String testRunLogPath)
+    {
+        this.testScriptPath = testScriptPath;
+        if (null == testRunLogPath)
+        {
+            this.testRunLogPath = getDeaultLogPath();
+        }
+        else
+        {
+            this.testRunLogPath = testRunLogPath;
+        }
+
+        this.runCmd = "python " + testScriptPath;
+    }
+
+    private String getDeaultLogPath()
+    {
+        File f = new File(testScriptPath);
+        String path = f.getAbsolutePath();
+        return path + "/log/";
+    }
+
+    public void run()
+    {
+
+    }
+
+    public void stop()
+    {
+
+    }
+
+    public String getTestScriptPath() {
+        return testScriptPath;
+    }
+
+    public void setTestScriptPath(String testScriptPath) {
+        this.testScriptPath = testScriptPath;
+    }
+
+    public String getTestRunLogPath() {
+        return testRunLogPath;
+    }
+
+    public void setTestRunLog(String testRunLog) {
+        this.testRunLogPath = testRunLog;
+    }
+
+    public String getRunCmd() {
+        return runCmd;
+    }
+
+    public void setRunCmd(String runCmd) {
+        this.runCmd = runCmd;
+    }
+
+    public int getRunTimes() {
+        return runTimes;
+    }
+
+    public void setRunTimes(int runTimes) {
+        this.runTimes = runTimes;
+    }
+
+    public boolean isFailStop() {
+        return isFailStop;
+    }
+
+    public void setFailStop(boolean failStop) {
+        isFailStop = failStop;
+    }
+
+    public int getRunTimeout() {
+        return runTimeout;
+    }
+
+    public void setRunTimeout(int runTimeout) {
+        this.runTimeout = runTimeout;
+    }
+
+    public String getPassCheckPattern() {
+        return passCheckPattern;
+    }
+
+    public void setPassCheckPattern(String passCheckPattern) {
+        this.passCheckPattern = passCheckPattern;
+    }
+
+    public TESTCASE_STATUS getCurStatus() {
+        return curStatus;
+    }
+
+    public void setCurStatus(TESTCASE_STATUS curStatus) {
+        this.curStatus = curStatus;
+    }
+}
