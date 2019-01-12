@@ -6,6 +6,7 @@ import com.testviewer.common.MsgQueue;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeCellEditor;
 import javax.swing.tree.TreeCellRenderer;
 import javax.swing.tree.TreeNode;
 import java.awt.*;
@@ -21,47 +22,9 @@ public class TestcaseViewer extends JTree implements MsgCom
     {
         super(root);
         setCellRenderer(new CheckBoxCellRenderer());
+        setEditable(true);
+        setCellEditor(new CheckBoxCellEditer());
         AddPopMenu();
-
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                super.mouseClicked(e);
-                CheckBoxNode node = null;
-                try {
-                    node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
-                }
-                catch (Exception es)
-                {
-                    return;
-                }
-
-                if(node.isLeaf())
-                {
-                    popMenu.SetLeafMod();
-                }
-                else
-                {
-                    popMenu.SetDirMod();
-                }
-
-                if (e.getX() > (30 + GetCheckBoxStartX()))
-                {
-                    return;
-                }
-
-                if (node.GetSelect())
-                {
-                    node.SetSelect(false);
-                }
-                else
-                {
-                    node.SetSelect(true);
-                }
-                repaint();
-            }
-        });
-
         query.RegistCom(this);
     }
 
@@ -116,7 +79,6 @@ public class TestcaseViewer extends JTree implements MsgCom
 
     public void CmdAddNode(String nodeXpath)
     {
-        System.out.println("11111111111111111111");
         AddTreeNode((CheckBoxNode)root, nodeXpath);
     }
 
@@ -166,9 +128,8 @@ class CheckBoxNode extends DefaultMutableTreeNode
     {
         this.isSelect = isSelect;
         int count = getChildCount();
-        for (int i=0; i<count; i++)
-        {
-            CheckBoxNode subNode = (CheckBoxNode)getChildAt(i);
+        for (int i=0; i<count; i++) {
+            CheckBoxNode subNode = (CheckBoxNode) getChildAt(i);
             subNode.SetSelect(isSelect);
         }
     }
@@ -176,6 +137,35 @@ class CheckBoxNode extends DefaultMutableTreeNode
     public boolean GetSelect()
     {
         return isSelect;
+    }
+}
+
+class CheckBoxCellEditer extends AbstractCellEditor implements TreeCellEditor
+{
+    private JCheckBox checkBox = null;
+    private JLabel label = null;
+    private JPanel panel = null;
+    public CheckBoxCellEditer()
+    {
+        super();
+        panel = new JPanel();
+        label = new JLabel();
+        checkBox = new JCheckBox();
+        panel.add(checkBox);
+        panel.add(label);
+    }
+
+    @Override
+    public Component getTreeCellEditorComponent(JTree tree, Object value, boolean isSelected, boolean expanded, boolean leaf, int row) {
+        CheckBoxNode node = (CheckBoxNode) value;
+        checkBox.setSelected(node.GetSelect());
+        label.setText(node.toString());
+        return panel;
+    }
+
+    @Override
+    public Object getCellEditorValue() {
+        return checkBox.isSelected();
     }
 }
 

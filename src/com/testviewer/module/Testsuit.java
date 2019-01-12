@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.testviewer.common.ShellClient;
 import com.testviewer.common.Common;
-import sun.net.www.protocol.http.HttpURLConnection;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -69,8 +68,15 @@ public class Testsuit {
         this.testcases = testcases;
     }
 
-    public Testsuit()
-    {}
+    public Testsuit(String xmlPath)
+    {
+        this.xmlPath = xmlPath;
+        try {
+            LoadFromXml(xmlPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     public Testsuit(String remotePath, String localPath)
     {
