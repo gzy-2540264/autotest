@@ -229,7 +229,7 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
 
 class TestcasePopMenu extends JPopupMenu
 {
-    private String[] menuList = {"执行", "停止", "设置", "查看源码"};
+    private String[] menuList = {"执行", "停止", "设置", "查看源码", "同步"};
     public TestcasePopMenu()
     {
         super();
