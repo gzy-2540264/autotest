@@ -1,6 +1,9 @@
 package com.testviewer.module;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.testviewer.common.Msg;
+import com.testviewer.common.MsgCom;
+import com.testviewer.common.MsgQueue;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -14,14 +17,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-public class Testsuit {
+public class Testsuit implements MsgCom{
     private static Testsuit instance = null;
     private String remotePath = null;
     private String localPath = null;
     private String xmlPath = null;
     private String logPaht = null;
     private List<Testcase> testcases = new ArrayList<Testcase>();
-
+    MsgQueue query = MsgQueue.GetInstance();
 
     public void PrintInfo() {
         for(Testcase testcase : testcases)
@@ -71,7 +74,9 @@ public class Testsuit {
     }
 
     //因为对象化IO需要保留此构造函数，一般不调用该函数
-    public Testsuit(){}
+    public Testsuit(){
+        query.RegistCom(this);
+    }
 
     public Testsuit(String xmlPath)
     {
@@ -81,6 +86,7 @@ public class Testsuit {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        query.RegistCom(this);
     }
 
     public Testsuit(String remotePath, String localPath)
@@ -88,6 +94,7 @@ public class Testsuit {
         this.localPath = localPath;
         this.remotePath = remotePath;
         LoadTestcase();
+        query.RegistCom(this);
     }
 
     private void LoadTestcase()
@@ -99,13 +106,27 @@ public class Testsuit {
             Testcase testcase = new Testcase(str, null);
             this.testcases.add(testcase);
         }
+        SetTreeView();
     }
 
+    private void SetTreeView()
+    {
+        for(Testcase testcase : this.testcases)
+        {
+            String str = testcase.getTestScriptPath();
+            String xpath = str.substring(this.localPath.length() + 1, str.length() - 3);
+            String newxpath = xpath.replace("\\", "/");
+            Msg msg = new Msg("CmdAddNode", GetComId(), "com.testviewer.ui.TestcaseViewer");
+            msg.SetParam("nodeXpath", newxpath);
+            query.SendMessage(msg);
+        }
+    }
 
     static public Testsuit LoadFromXml(String xmlPath) throws Exception {
         ObjectMapper mapper = new XmlMapper();
         Testsuit suit = mapper.readValue(new File(xmlPath),
                 new TypeReference<Testsuit>(){});
+        suit.SetTreeView();
         return suit;
     }
 
@@ -114,6 +135,18 @@ public class Testsuit {
         ((XmlMapper) mapper).enable(SerializationFeature.INDENT_OUTPUT);
         String str = mapper.writeValueAsString(suit);
         mapper.writeValue(new File(xmlPath), suit);
+    }
+
+    public void CmdSaveToXml(Msg msg)
+    {
+
+        String xmlPath = (String)msg.GetParam("xmlPath");
+        System.out.println("start save to xml file:" + xmlPath);
+        try {
+            SaveToXml(this, xmlPath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     static public void main(String[] args)
@@ -131,5 +164,10 @@ public class Testsuit {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public String GetComId() {
+        return getClass().getName();
     }
 }

@@ -66,7 +66,7 @@ public class Common {
     static public void main(String[] args)
     {
         LinkedList<String> outRspList = new LinkedList<String>();
-        RouteDir("D:\\software", null, null, outRspList);
+        RouteDir("D:\\gzy", ".py", null, outRspList);
         for(String str : outRspList)
         {
             System.out.println(str);

@@ -4,7 +4,6 @@ import com.testviewer.common.Msg;
 import com.testviewer.common.MsgCom;
 import com.testviewer.common.MsgQueue;
 import com.testviewer.module.Testsuit;
-import javafx.stage.FileChooser;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileFilter;
@@ -89,7 +88,7 @@ public class MainMenu extends JMenu implements MsgCom {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fileChooser = new JFileChooser();
-                fileChooser.setFileSelectionMode(JFileChooser.SAVE_DIALOG);
+                fileChooser.setFileSelectionMode(JFileChooser.SAVE_DIALOG |JFileChooser.DIRECTORIES_ONLY);
                 fileChooser.setFileFilter(new FileFilter() {
                     @Override
                     public boolean accept(File f) {
@@ -115,6 +114,13 @@ public class MainMenu extends JMenu implements MsgCom {
                 });
                 fileChooser.showOpenDialog(null);
                 File xmlPath = fileChooser.getSelectedFile();
+                System.out.println(xmlPath);
+                String xmlAbsPath = xmlPath.getAbsolutePath();
+
+
+                Msg msg = new Msg("CmdSaveToXml", null, "com.testviewer.module.Testsuit");
+                msg.SetParam("xmlPath", xmlAbsPath);
+                query.SendMessage(msg);
             }
         });
         add(item);
@@ -156,9 +162,8 @@ public class MainMenu extends JMenu implements MsgCom {
                 {
                     return;
                 }
-
-                Testsuit  suit = new Testsuit(chooseFile.getPath(), remotePath);
-
+                Testsuit  suit = new Testsuit(remotePath, chooseFile.getPath());
+                item.setEnabled(false);
             }//public void actionPerformed(ActionEvent e)
         });
         add(item);

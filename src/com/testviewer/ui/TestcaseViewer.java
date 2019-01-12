@@ -5,25 +5,61 @@ import com.testviewer.common.MsgCom;
 import com.testviewer.common.MsgQueue;
 
 import javax.swing.*;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.TreeCellEditor;
-import javax.swing.tree.TreeCellRenderer;
-import javax.swing.tree.TreeNode;
+import javax.swing.event.CellEditorListener;
+import javax.swing.event.ChangeEvent;
+import javax.swing.tree.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class TestcaseViewer extends JTree implements MsgCom
 {
     private TestcasePopMenu popMenu = null;
-    static private TreeNode root = new CheckBoxNode("测试用例");
+    static private DefaultMutableTreeNode root = new CheckBoxNode("测试用例");
+
     MsgQueue query = MsgQueue.GetInstance();
     public TestcaseViewer()
     {
         super(root);
-        setCellRenderer(new CheckBoxCellRenderer());
-        setEditable(true);
-        setCellEditor(new CheckBoxCellEditer());
+        CheckBoxCellRenderer renderer = new CheckBoxCellRenderer();
+        setCellRenderer(renderer);
+
+//        setCellEditor(new CheckBoxCellEditer(this));
+//        setEditable(true);
+
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                int hotspot = new JCheckBox().getPreferredSize().width;
+                TreePath path = getPathForLocation(e.getX(), e.getY());
+                if(path==null)
+                    return;
+                if(e.getX()>getPathBounds(path).x+hotspot)
+                    return;
+                if(e.getY()>getPathBounds(path).y+hotspot)
+                    return;
+
+                CheckBoxNode node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
+                if (node==null)
+                {
+                    return;
+                }
+                boolean isSelect = node.GetSelect();
+                if(isSelect)
+                {
+                    node.SetSelect(false);
+                }
+                else
+                {
+                    node.SetSelect(true);
+                }
+                repaint();
+            }
+        });
+
         AddPopMenu();
         query.RegistCom(this);
     }
@@ -64,7 +100,9 @@ public class TestcaseViewer extends JTree implements MsgCom
             if(node.toString().equals(curNodeStr))
             {
                 findNode = node;
-                AddTreeNode(node, nextPath);
+                if (nextPath.length()>0) {
+                    AddTreeNode(node, nextPath);
+                }
             }
         }
 
@@ -73,13 +111,19 @@ public class TestcaseViewer extends JTree implements MsgCom
         {
             CheckBoxNode node = new CheckBoxNode(curNodeStr);
             curRoot.add(node);
-            AddTreeNode(node, nodeXpath);
+            if (nextPath.length()>0) {
+                AddTreeNode(node, nextPath);
+            }
         }
     }
 
-    public void CmdAddNode(String nodeXpath)
+    public void CmdAddNode(Msg msg)
     {
-        AddTreeNode((CheckBoxNode)root, nodeXpath);
+        AddTreeNode((CheckBoxNode)root, (String)msg.GetParam("nodeXpath"));
+        //不知道为什么，如果不展开的话，后面就无法展开了
+        expandRow(0);
+        repaint();
+
     }
 
     private int GetCheckBoxStartX()
@@ -142,25 +186,71 @@ class CheckBoxNode extends DefaultMutableTreeNode
 
 class CheckBoxCellEditer extends AbstractCellEditor implements TreeCellEditor
 {
-    private JCheckBox checkBox = null;
-    private JLabel label = null;
-    private JPanel panel = null;
-    public CheckBoxCellEditer()
+    JTree tree = null;
+    private JCheckBox checkBox = new JCheckBox();
+    private JLabel label = new JLabel();
+    private JPanel panel = new JPanel();
+    private CheckBoxNode node = null;
+    public CheckBoxCellEditer(JTree tree)
     {
         super();
-        panel = new JPanel();
-        label = new JLabel();
-        checkBox = new JCheckBox();
         panel.add(checkBox);
         panel.add(label);
+        this.tree = tree;
+
+        addCellEditorListener(new CellEditorListener() {
+            @Override
+            public void editingStopped(ChangeEvent e) {
+
+            }
+
+            @Override
+            public void editingCanceled(ChangeEvent e) {
+
+            }
+        });
+
+        checkBox.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                node.SetSelect(checkBox.isSelected());
+                tree.repaint();
+            }
+        });
     }
 
     @Override
     public Component getTreeCellEditorComponent(JTree tree, Object value, boolean isSelected, boolean expanded, boolean leaf, int row) {
-        CheckBoxNode node = (CheckBoxNode) value;
+        node = (CheckBoxNode)value;
         checkBox.setSelected(node.GetSelect());
-        label.setText(node.toString());
+
+        if(isSelected)
+        {
+            panel.setBackground(Color.LIGHT_GRAY);
+        }
+        else
+        {
+            panel.setBackground(Color.WHITE);
+        }
+
+        label.setText(value.toString());
+        if (leaf==false && expanded==false)
+        {
+            ImageIcon icon = new ImageIcon("C:\\Users\\timmy\\Desktop\\JDemo\\TestViewer\\resource\\dir_close.PNG");
+            label.setIcon(icon);
+        }
+        else if(leaf==false && expanded==true)
+        {
+            ImageIcon icon = new ImageIcon("C:\\Users\\timmy\\Desktop\\JDemo\\TestViewer\\resource\\dir_open.PNG");
+            label.setIcon(icon);
+        }
+        else
+        {
+            ImageIcon icon = new ImageIcon("C:\\Users\\timmy\\Desktop\\JDemo\\TestViewer\\resource\\fail.PNG");
+            label.setIcon(icon);
+        }
         return panel;
+
     }
 
     @Override
@@ -228,7 +318,6 @@ class TestcasePopMenu extends JPopupMenu
             JMenuItem item = new JMenuItem(menuStr);
 
             add(item);
-            System.out.println(menuStr);
         }
     }
 

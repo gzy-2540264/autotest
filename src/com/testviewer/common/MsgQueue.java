@@ -79,7 +79,7 @@ public class MsgQueue implements Runnable{
                 for (MsgCom com : ComList)
                 {
                     //说明已经找到
-                    if (com.GetComId()==msg.GetDestComId())
+                    if (com.GetComId().equals(msg.GetDestComId()))
                     {
                         String funcName = msg.GetMsgName();
                         Method[] methods = com.getClass().getDeclaredMethods();

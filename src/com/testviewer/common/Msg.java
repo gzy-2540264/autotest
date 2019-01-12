@@ -34,4 +34,9 @@ public class Msg {
         }
         params.put(key, value);
     }
+
+    public Object GetParam(String key)
+    {
+        return params.get(key);
+    }
 }

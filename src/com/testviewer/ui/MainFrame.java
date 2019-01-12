@@ -78,9 +78,9 @@ public class MainFrame extends JFrame implements MsgCom {
         Common.SleepEx(300);
         frame.SetSplite();
 
-        MsgQueue query = MsgQueue.GetInstance();
-        Msg msg = new Msg("CmdAddNode", null, "TestcaseViewer");
-        msg.SetParam("nodeXpath", "document/ediary/gzy");
-        query.SendMessage(msg);
+//        MsgQueue query = MsgQueue.GetInstance();
+//        Msg msg = new Msg("CmdAddNode", null, "com.testviewer.ui.TestcaseViewer");
+//        msg.SetParam("nodeXpath", "document/ediary/gzy");
+//        query.SendMessage(msg);
     }
 }
