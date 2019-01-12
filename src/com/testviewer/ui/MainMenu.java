@@ -20,11 +20,7 @@ public class MainMenu extends JMenu implements MsgCom {
         super("文件");
         setOpenXmlItem();
         setOpenTestcasePathItem();
-
-        JMenuItem save = new JMenuItem("保存");
-        add(save);
-        JMenuItem setPath = new JMenuItem("设置用例路径");
-        add(setPath);
+        setSaveTestcasePathItem();
 
         addSeparator();
 
@@ -75,6 +71,7 @@ public class MainMenu extends JMenu implements MsgCom {
                 File file = fileChooser.getSelectedFile();
                 try {
                     Testsuit.LoadFromXml(file.getPath());
+                    open.setEnabled(false);
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }
@@ -82,6 +79,45 @@ public class MainMenu extends JMenu implements MsgCom {
         });
 
         add(open);
+    }
+
+    private void setSaveTestcasePathItem()
+    {
+        JMenuItem item = new JMenuItem("保存");
+        item.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.SAVE_DIALOG);
+                fileChooser.setFileFilter(new FileFilter() {
+                    @Override
+                    public boolean accept(File f) {
+                        if (f.isDirectory())
+                        {
+                            return false;
+                        }
+                        else
+                        {
+                            String name = f.getName();
+                            if (name.endsWith(".xml"))
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+
+                    @Override
+                    public String getDescription() {
+                        return "*.xml";
+                    }
+                });
+                fileChooser.showOpenDialog(null);
+                File xmlPath = fileChooser.getSelectedFile();
+            }
+        });
+        add(item);
     }
 
     private void setOpenTestcasePathItem()

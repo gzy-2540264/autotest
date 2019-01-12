@@ -4,6 +4,7 @@ import com.testviewer.common.MsgCom;
 import com.testviewer.common.Msg;
 import com.testviewer.common.MsgQueue;
 import com.testviewer.common.SwingConsole;
+import com.testviewer.module.Testsuit;
 
 import javax.swing.*;
 import java.awt.event.ComponentAdapter;

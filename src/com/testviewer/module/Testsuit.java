@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+
 public class Testsuit {
+    private static Testsuit instance = null;
     private String remotePath = null;
     private String localPath = null;
     private String xmlPath = null;
@@ -67,6 +69,9 @@ public class Testsuit {
     public void setTestcases(List<Testcase> testcases) {
         this.testcases = testcases;
     }
+
+    //因为对象化IO需要保留此构造函数，一般不调用该函数
+    public Testsuit(){}
 
     public Testsuit(String xmlPath)
     {
