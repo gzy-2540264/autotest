@@ -48,7 +48,7 @@ public class MainFrame extends JFrame implements MsgCom {
         splitPane1.setLeftComponent(scrollPane);
         splitPane2 = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPane2.setTopComponent(new RunLogViewer());
-        splitPane2.setBottomComponent(new RunStepViewer());
+        splitPane2.setBottomComponent(new JScrollPane(new RunStepViewer()));
         splitPane1.setRightComponent(splitPane2);
         add(splitPane1);
     }

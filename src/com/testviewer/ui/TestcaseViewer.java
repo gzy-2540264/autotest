@@ -28,11 +28,23 @@ public class TestcaseViewer extends JTree implements MsgCom
 
 //        setCellEditor(new CheckBoxCellEditer(this));
 //        setEditable(true);
+        AddPopMenu();
+        query.RegistCom(this);
 
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                if ( getSelectionPath() ==null)
+                {
+                    return;
+                }
+                CheckBoxNode node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
+
+                //设置配置面板
+                Msg msg = new Msg("CmdSetStepViewer", null, GetSelectNodeXpath());
+                query.SendMessage(msg);
+
                 int hotspot = new JCheckBox().getPreferredSize().width;
                 TreePath path = getPathForLocation(e.getX(), e.getY());
                 if(path==null)
@@ -42,11 +54,6 @@ public class TestcaseViewer extends JTree implements MsgCom
                 if(e.getY()>getPathBounds(path).y+hotspot)
                     return;
 
-                CheckBoxNode node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
-                if (node==null)
-                {
-                    return;
-                }
                 boolean isSelect = node.GetSelect();
                 if(isSelect)
                 {
@@ -59,9 +66,6 @@ public class TestcaseViewer extends JTree implements MsgCom
                 repaint();
             }
         });
-
-        AddPopMenu();
-        query.RegistCom(this);
     }
 
     /**
@@ -157,6 +161,31 @@ public class TestcaseViewer extends JTree implements MsgCom
     @Override
     public String GetComId() {
         return this.getClass().getName();
+    }
+
+    public String GetSelectNodeXpath()
+    {
+        TreePath path =  getSelectionPath();
+        Object[] list = path.getPath();
+        StringBuffer rspStrBuff = new StringBuffer();
+        boolean isRootNode = true;
+        for (Object str : list) {
+            if (isRootNode)
+            {
+                isRootNode = false;
+                continue;
+            }
+            if (rspStrBuff.length()==0) {
+                rspStrBuff.append(str);
+            }
+            else
+            {
+                rspStrBuff.append("/");
+                rspStrBuff.append(str);
+            }
+        }
+        System.out.println(rspStrBuff.toString());
+        return rspStrBuff.toString();
     }
 }
 

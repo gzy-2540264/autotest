@@ -53,6 +53,7 @@ public class MsgQueue implements Runnable{
 
     public void SendMessage(Msg msg)
     {
+        System.out.println("MSG " + msg.GetMsgName() + " to " + msg.GetDestComId());
         msgQueue.add(msg);
     }
 

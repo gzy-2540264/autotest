@@ -1,8 +1,15 @@
 package com.testviewer.module;
 
+import com.testviewer.common.Common;
+import com.testviewer.common.Msg;
+import com.testviewer.common.MsgCom;
+import com.testviewer.common.MsgQueue;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
+
 import java.io.File;
 
-public class Testcase {
+public class Testcase implements MsgCom {
+    private String projectPath = null;         //工程所在路径
     private String testScriptPath = null;  //脚本路径
     private String testRunLogPath = null;      //脚本执行日志存放目录
     private String runCmd = null;          //脚本运行命令
@@ -12,15 +19,25 @@ public class Testcase {
     private String passCheckPattern = null; //脚本执行成功日志样式
     private TESTCASE_STATUS curStatus = TESTCASE_STATUS.IDLE;  //脚本当前状态
 
+    private MsgQueue queue = MsgQueue.GetInstance();
+
+    @Override
+    public String GetComId(){
+        return getTreeXpath();
+    }
+
     public enum TESTCASE_STATUS{
         IDLE, PASSED, FAILED, ERROR, RUNNING, BREAK;
     }
 
     public Testcase()
-    {}
-
-    public Testcase(String testScriptPath, String testRunLogPath)
     {
+        queue.RegistCom(this);
+    }
+
+    public Testcase(String testScriptPath, String testRunLogPath, String projectPath)
+    {
+        this.projectPath = projectPath;
         this.testScriptPath = testScriptPath;
         if (null == testRunLogPath)
         {
@@ -32,6 +49,7 @@ public class Testcase {
         }
 
         this.runCmd = "python " + testScriptPath;
+        queue.RegistCom(this);
     }
 
     private String getDeaultLogPath()
@@ -113,5 +131,20 @@ public class Testcase {
 
     public void setCurStatus(TESTCASE_STATUS curStatus) {
         this.curStatus = curStatus;
+    }
+
+    public void CmdSetStepViewer(Msg msg)
+    {
+        Msg msgSend = new Msg("CmdSetItemSetting", null, "com.testviewer.ui.RunStepViewer");
+        msgSend.SetParam("testcase", this);
+        queue.SendMessage(msg);
+    }
+
+    public String getTreeXpath()
+    {
+        String xpath = testScriptPath.substring(projectPath.length() + 1, testScriptPath.length() - 3);
+        String rspString =  xpath.replace("\\", "/");
+        return rspString;
+
     }
 }

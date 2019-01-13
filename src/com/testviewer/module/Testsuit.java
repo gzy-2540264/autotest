@@ -103,7 +103,7 @@ public class Testsuit implements MsgCom{
         Common.RouteDir(this.localPath, ".py", null, outRspList);
         for(String str : outRspList)
         {
-            Testcase testcase = new Testcase(str, null);
+            Testcase testcase = new Testcase(str, null, localPath);
             this.testcases.add(testcase);
         }
         SetTreeView();
@@ -113,11 +113,8 @@ public class Testsuit implements MsgCom{
     {
         for(Testcase testcase : this.testcases)
         {
-            String str = testcase.getTestScriptPath();
-            String xpath = str.substring(this.localPath.length() + 1, str.length() - 3);
-            String newxpath = xpath.replace("\\", "/");
             Msg msg = new Msg("CmdAddNode", GetComId(), "com.testviewer.ui.TestcaseViewer");
-            msg.SetParam("nodeXpath", newxpath);
+            msg.SetParam("nodeXpath", testcase.getTreeXpath());
             query.SendMessage(msg);
         }
     }
@@ -148,6 +145,7 @@ public class Testsuit implements MsgCom{
             e.printStackTrace();
         }
     }
+
 
     static public void main(String[] args)
     {
