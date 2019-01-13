@@ -23,7 +23,7 @@ public class Testcase implements MsgCom {
 
     @Override
     public String GetComId(){
-        return getTreeXpath();
+        return GetTreeXpath();
     }
 
     public enum TESTCASE_STATUS{
@@ -137,10 +137,10 @@ public class Testcase implements MsgCom {
     {
         Msg msgSend = new Msg("CmdSetItemSetting", null, "com.testviewer.ui.RunStepViewer");
         msgSend.SetParam("testcase", this);
-        queue.SendMessage(msg);
+        queue.SendMessage(msgSend);
     }
 
-    public String getTreeXpath()
+    public String GetTreeXpath()
     {
         String xpath = testScriptPath.substring(projectPath.length() + 1, testScriptPath.length() - 3);
         String rspString =  xpath.replace("\\", "/");

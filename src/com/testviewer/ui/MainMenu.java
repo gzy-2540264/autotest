@@ -138,7 +138,6 @@ public class MainMenu extends JMenu implements MsgCom {
                 });
                 fileChooser.showOpenDialog(null);
                 File xmlPath = fileChooser.getSelectedFile();
-                System.out.println(xmlPath);
                 String xmlAbsPath = xmlPath.getAbsolutePath();
 
 

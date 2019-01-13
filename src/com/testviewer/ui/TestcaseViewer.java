@@ -184,7 +184,6 @@ public class TestcaseViewer extends JTree implements MsgCom
                 rspStrBuff.append(str);
             }
         }
-        System.out.println(rspStrBuff.toString());
         return rspStrBuff.toString();
     }
 }
@@ -338,7 +337,7 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
 
 class TestcasePopMenu extends JPopupMenu
 {
-    private String[] menuList = {"执行", "停止", "设置", "查看源码", "同步"};
+    private String[] menuList = {"执行", "停止", "查看源码"};
     public TestcasePopMenu()
     {
         super();
@@ -355,7 +354,6 @@ class TestcasePopMenu extends JPopupMenu
         getComponent(0).setEnabled(true);
         getComponent(1).setEnabled(true);
         getComponent(2).setEnabled(true);
-        getComponent(3).setEnabled(true);
     }
 
     public void SetDirMod()
@@ -363,6 +361,5 @@ class TestcasePopMenu extends JPopupMenu
         getComponent(0).setEnabled(true);
         getComponent(1).setEnabled(true);
         getComponent(2).setEnabled(false);
-        getComponent(3).setEnabled(false);
     }
 }

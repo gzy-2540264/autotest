@@ -114,7 +114,7 @@ public class Testsuit implements MsgCom{
         for(Testcase testcase : this.testcases)
         {
             Msg msg = new Msg("CmdAddNode", GetComId(), "com.testviewer.ui.TestcaseViewer");
-            msg.SetParam("nodeXpath", testcase.getTreeXpath());
+            msg.SetParam("nodeXpath", testcase.GetTreeXpath());
             query.SendMessage(msg);
         }
     }

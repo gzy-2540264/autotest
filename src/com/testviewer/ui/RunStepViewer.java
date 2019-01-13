@@ -17,26 +17,18 @@ import java.util.Vector;
 
 public class RunStepViewer extends JPanel implements MsgCom {
     JTable table = new JTable();
-    JButton commit = new JButton("确认");
-    JButton cancel = new JButton("取消");
     MsgQueue queue = MsgQueue.GetInstance();
 
     public RunStepViewer()
     {
         setLayout(new BorderLayout());
-        add(table, BorderLayout.NORTH);
-
-        JPanel subPanel = new JPanel();
-        subPanel.add(new JButton("确认"));
-        subPanel.add(new JButton("取消"));
-        add(subPanel, BorderLayout.WEST);
+        add(table);
 
         queue.RegistCom(this);
     }
 
     public void CmdSetItemSetting(Msg msg)
     {
-        System.out.println("222222222222222222");
         Testcase testcase = (Testcase) msg.GetParam("testcase");
         TableModel tableModel = new TestcaseTableMode(testcase);
         table.setModel(tableModel);
@@ -90,7 +82,7 @@ class TestcaseTableMode implements TableModel {
         {
             return false;
         }
-        if (fieldDescs[columnIndex].indexOf("(只读)")>=0)
+        if (fieldDescs[rowIndex].indexOf("(只读)")>=0)
         {
             return false;
         }
@@ -103,9 +95,9 @@ class TestcaseTableMode implements TableModel {
         if (columnIndex==0) {
             rspObj = fieldNames[rowIndex];
         }
-        else if(columnIndex==1)
+        else if(columnIndex==2)
         {
-            rspObj = fieldDescs[columnIndex];
+            rspObj = fieldDescs[rowIndex];
         }
         else if(columnIndex==1)
         {
@@ -120,27 +112,27 @@ class TestcaseTableMode implements TableModel {
             }
             else if(fieldName.equals("runCmd"))
             {
-                rspObj =  testcase.getTestRunLogPath();
+                rspObj =  testcase.getRunCmd();
             }
             else if(fieldName.equals("runTimes"))
             {
-                rspObj =  testcase.getTestRunLogPath();
+                rspObj =  testcase.getRunTimes();
             }
             else if(fieldName.equals("isFailStop"))
             {
-                rspObj =  testcase.getTestRunLogPath();
+                rspObj =  testcase.isFailStop();
             }
             else if(fieldName.equals("runTimeout"))
             {
-                rspObj =  testcase.getTestRunLogPath();
+                rspObj =  testcase.getRunTimeout();
             }
             else if(fieldName.equals("passCheckPattern"))
             {
-                rspObj =  testcase.getTestRunLogPath();
+                rspObj =  testcase.getPassCheckPattern();
             }
             else if(fieldName.equals("curStatus"))
             {
-                rspObj =  testcase.getTestRunLogPath();
+                rspObj =  testcase.getCurStatus();
             }
             else
             {
