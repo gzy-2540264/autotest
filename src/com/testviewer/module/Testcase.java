@@ -6,7 +6,7 @@ import com.testviewer.common.MsgCom;
 import com.testviewer.common.MsgQueue;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
-import java.io.File;
+import java.io.*;
 
 public class Testcase implements MsgCom {
     private String projectPath = null;         //工程所在路径
@@ -146,5 +146,47 @@ public class Testcase implements MsgCom {
         String rspString =  xpath.replace("\\", "/");
         return rspString;
 
+    }
+
+    public String getProjectPath() {
+        return projectPath;
+    }
+
+    public void setProjectPath(String projectPath) {
+        this.projectPath = projectPath;
+    }
+
+    public void CmdShowFileCode(Msg xxx)
+    {
+        File file = new File(testScriptPath);
+        if (file.exists()==false)
+        {
+            System.out.println("文件不存在:" + testScriptPath);
+            return;
+        }
+        boolean isClearBoard = false;
+        try {
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(file));
+            while(true) {
+                char[] tempchars = new char[1024];
+                int readLen = reader.read(tempchars);
+                if (readLen<0)
+                {
+                    break;
+                }
+                if (isClearBoard == false){
+                    Msg msg = new Msg("CmdClear", null, "com.testviewer.ui.RunLogViewer");
+                    queue.SendMessage(msg);
+                    isClearBoard = true;
+                }
+
+                Msg msg = new Msg("CmdShowText", null, "com.testviewer.ui.RunLogViewer");
+                System.out.println(String.valueOf(tempchars).length());
+                msg.SetParam("showString", String.valueOf(tempchars));
+                queue.SendMessage(msg);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

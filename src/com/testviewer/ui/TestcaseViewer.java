@@ -7,12 +7,17 @@ import com.testviewer.common.MsgQueue;
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
 import javax.swing.event.ChangeEvent;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestcaseViewer extends JTree implements MsgCom
 {
@@ -64,6 +69,26 @@ public class TestcaseViewer extends JTree implements MsgCom
                     node.SetSelect(true);
                 }
                 repaint();
+            }
+        });
+
+        addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                CheckBoxNode node = (CheckBoxNode) e.getPath().getLastPathComponent();
+                if (node==null)
+                {
+                    return;
+                }
+
+                if(node.isLeaf())
+                {
+                    popMenu.SetMenuMod(TestcasePopMenu.MenuMode.LEAF_IDLE);
+                }
+                else
+                {
+                    popMenu.SetMenuMod(TestcasePopMenu.MenuMode.DIR_IDLE);
+                }
             }
         });
     }
@@ -147,7 +172,7 @@ public class TestcaseViewer extends JTree implements MsgCom
 
     private void AddPopMenu()
     {
-        TestcasePopMenu popupMenu = new TestcasePopMenu();
+        TestcasePopMenu popupMenu = new TestcasePopMenu(this);
         setComponentPopupMenu(popupMenu);
         this.popMenu = popupMenu;
     }
@@ -185,6 +210,12 @@ public class TestcaseViewer extends JTree implements MsgCom
             }
         }
         return rspStrBuff.toString();
+    }
+
+    public void ShowFileCode()
+    {
+        Msg msg = new Msg("CmdShowFileCode", null, GetSelectNodeXpath());
+        query.SendMessage(msg);
     }
 }
 
@@ -338,28 +369,73 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
 class TestcasePopMenu extends JPopupMenu
 {
     private String[] menuList = {"执行", "停止", "查看源码"};
-    public TestcasePopMenu()
+    public enum MenuMode
+    {
+        LEAF_IDLE,
+        LEAF_RUNNING,
+        DIR_IDLE,
+        DIR_RUNNING
+    }
+    private HashMap<MenuMode, boolean[]> modeDefine = new HashMap<MenuMode, boolean[]>(){
+        {put(MenuMode.LEAF_IDLE,    new boolean[]{true, false, true});
+        put(MenuMode.LEAF_RUNNING, new boolean[]{false, true, false});
+        put(MenuMode.DIR_IDLE,     new boolean[]{true, true, false});
+        put(MenuMode.DIR_RUNNING,  new boolean[]{false, false, false});}
+    };
+    TestcaseViewer parentTree = null;
+
+    public TestcasePopMenu(TestcaseViewer parentTree)
     {
         super();
+        BuildMenuItems();
+        this.parentTree = parentTree;
+        SetCodeViewListener();
+    }
+
+    private void BuildMenuItems() {
         for (String menuStr : menuList)
         {
             JMenuItem item = new JMenuItem(menuStr);
-
             add(item);
         }
     }
 
-    public void SetLeafMod()
+    public void SetMenuMod(TestcasePopMenu.MenuMode mode)
     {
-        getComponent(0).setEnabled(true);
-        getComponent(1).setEnabled(true);
-        getComponent(2).setEnabled(true);
+        boolean[] modeList = modeDefine.get(mode);
+        int index = 0;
+        for(boolean menuEnble : modeList)
+        {
+            JMenuItem item = (JMenuItem)getComponent(index);
+            item.setEnabled(menuEnble);
+        }
     }
 
-    public void SetDirMod()
+    private JMenuItem SearchItemByText(String str)
     {
-        getComponent(0).setEnabled(true);
-        getComponent(1).setEnabled(true);
-        getComponent(2).setEnabled(false);
+        int index = 0;
+        JMenuItem getItem = null;
+        int count = getComponentCount();
+        for (int i=0; i<count; i++)
+        {
+            JMenuItem item = (JMenuItem)getComponent(i);
+            if (item.getText().equals(str))
+            {
+                getItem = item;
+                break;
+            }
+        }
+        return getItem;
+    }
+
+    public void SetCodeViewListener()
+    {
+        JMenuItem item = SearchItemByText("查看源码");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                parentTree.ShowFileCode();
+            }
+        });
     }
 }
