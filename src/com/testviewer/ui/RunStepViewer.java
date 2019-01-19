@@ -75,6 +75,10 @@ class TestcaseTableMode implements TableModel {
 
     @Override
     public int getColumnCount() {
+        if (testcase==null)
+        {
+            return 0;
+        }
         return columns.length;
     }
 

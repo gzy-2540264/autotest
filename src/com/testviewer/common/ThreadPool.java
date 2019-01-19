@@ -19,9 +19,16 @@ public class ThreadPool implements Runnable{
         poolExecutor.execute(this);
     }
 
-    public void registTick(Method method, Object obj)
+    public TickFuncInfo registTick(Method method, Object obj)
     {
-        tickFuncList.add(new TickFuncInfo(method, obj));
+        TickFuncInfo hand = new TickFuncInfo(method, obj);
+        tickFuncList.add(hand);
+        return hand;
+    }
+
+    public void unRegistTick(TickFuncInfo hand)
+    {
+        hand.isEndTick = true;
     }
 
     public void registTask(Runnable runnable) throws InterruptedException {
@@ -33,13 +40,24 @@ public class ThreadPool implements Runnable{
         while (true)
         {
             long timeStart = System.currentTimeMillis();
+            ArrayList<TickFuncInfo> needRemoveFuncs = new ArrayList<TickFuncInfo>();
             for (TickFuncInfo funcInfo : tickFuncList) {
                 try {
                     funcInfo.method.invoke(funcInfo.obj, null);
+                    if(funcInfo.isEndTick)
+                    {
+                        needRemoveFuncs.add(funcInfo);
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
+
+            for(TickFuncInfo funcInfo: needRemoveFuncs)
+            {
+                tickFuncList.remove(funcInfo);
+            }
+
             long timeEnd = System.currentTimeMillis();
             long timeCost = timeEnd - timeStart;
 
@@ -53,15 +71,17 @@ public class ThreadPool implements Runnable{
             }
         }
     }//end run
-}
 
-class TickFuncInfo
-{
-    public Method method;
-    public Object obj;
-    public TickFuncInfo(Method method, Object obj)
+    public class TickFuncInfo
     {
-        this.method = method;
-        this.obj = obj;
+        public Method method;
+        public Object obj;
+        public boolean isEndTick = false;
+        public TickFuncInfo(Method method, Object obj)
+        {
+            this.method = method;
+            this.obj = obj;
+        }
     }
 }
+

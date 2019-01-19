@@ -1,14 +1,12 @@
 package com.testviewer.module;
 
-import com.testviewer.common.Common;
-import com.testviewer.common.Msg;
-import com.testviewer.common.MsgCom;
-import com.testviewer.common.MsgQueue;
+import com.testviewer.common.*;
 import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.io.*;
+import java.util.Arrays;
 
-public class Testcase implements MsgCom {
+public class Testcase implements MsgCom, Runnable {
     private String projectPath = null;         //工程所在路径
     private String testScriptPath = null;  //脚本路径
     private String testRunLogPath = null;      //脚本执行日志存放目录
@@ -20,11 +18,29 @@ public class Testcase implements MsgCom {
     private String passCheckPattern = ""; //脚本执行成功日志样式
     private TESTCASE_STATUS curStatus = TESTCASE_STATUS.IDLE;  //脚本当前状态
 
+    ThreadPool threadPool = null;
+    Process process = null;
+    ThreadPool.TickFuncInfo tickHand = null;
+    boolean isThreadEnd = true;
+
+
     private MsgQueue queue = MsgQueue.GetInstance();
 
     @Override
     public String GetComId(){
         return GetTreeXpath();
+    }
+
+    @Override
+    public void run() {
+        Runtime rt = Runtime.getRuntime();
+        try {
+            process = rt.exec(runCmd);
+        } catch (Exception e) {
+            process = null;
+            e.printStackTrace();
+        }
+        isThreadEnd = true;
     }
 
     public enum TESTCASE_STATUS{
@@ -60,38 +76,92 @@ public class Testcase implements MsgCom {
         return path + "/log/";
     }
 
+
     public void CmdRun(Msg msg)
     {
         setCurStatus(TESTCASE_STATUS.RUNNING);
-        String out = "";
+
+        Msg submsg = new Msg("CmdUpdateNodeStatus", null, "com.testviewer.ui.TestcaseViewer");
+        submsg.SetParam("testcase", this);
+        queue.SendMessage(submsg);
+
+        submsg = new Msg("CmdSetItemSetting", null, "com.testviewer.ui.RunStepViewer");
+        submsg.SetParam("testcase", this);
+        queue.SendMessage(submsg);
+
+
+        threadPool = new ThreadPool();
         try {
-            out = Common.LocalCmd(runCmd);
-        } catch (IOException e) {
+            threadPool.registTask(this);
+            tickHand = threadPool.registTick(getClass().getMethod("MonitorTick"),this);
+            isThreadEnd = false;
+        } catch (Exception e) {
             e.printStackTrace();
+            isThreadEnd = true;
         }
+    }
 
-        Msg submsg = new Msg("CmdClear", null, "com.testviewer.ui.RunLogViewer");
-        queue.SendMessage(submsg);
-
-        submsg = new Msg("CmdShowText", null, "com.testviewer.ui.RunLogViewer");
-        submsg.SetParam("showString", out);
-        queue.SendMessage(submsg);
-        if(out==null)
+    /**
+     * 在用例执行完成后。通过日志分析用例成功还是失败
+     */
+    private void CheckTestcaseResult(String logStr)
+    {
+        boolean isResultPass =  false;
+        if(passCheckPattern != null && passCheckPattern.length()>0)
         {
-            setCurStatus(TESTCASE_STATUS.ERROR);
+            if(logStr.endsWith(passCheckPattern))
+            {
+                isResultPass = true;
+            }
         }
-        else if(out.endsWith(passCheckPattern))
+        if (isResultPass==false)
+        {
+            setCurStatus(TESTCASE_STATUS.FAILED);
+        }else
         {
             setCurStatus(TESTCASE_STATUS.PASSED);
         }
-        else
+
+        Msg msg = new Msg("CmdUpdateNodeStatus", null, "com.testviewer.ui.TestcaseViewer");
+        msg.SetParam("testcase", this);
+        queue.SendMessage(msg);
+
+        msg = new Msg("CmdSetItemSetting", null, "com.testviewer.ui.RunStepViewer");
+        msg.SetParam("testcase", this);
+        queue.SendMessage(msg);
+
+        threadPool.unRegistTick(tickHand);
+        tickHand = null;
+    }
+
+    public void MonitorTick()
+    {
+        if (process==null)
         {
-            setCurStatus(TESTCASE_STATUS.FAILED);
+            return;
+        }
+        byte[] b = new byte[10240];
+        try {
+            Arrays.fill(b, (byte)0);
+            InputStream in = process.getInputStream();
+            in.read(b);
+            String temp = new String(b, "GBK");
+            temp = temp.trim();
+            if (temp.length()>0) {
+                Msg msg = new Msg("CmdShowText", null, "com.testviewer.ui.RunLogViewer");
+                msg.SetParam("showString", String.valueOf(temp));
+                queue.SendMessage(msg);
+
+                if (isThreadEnd)
+                {
+                    CheckTestcaseResult(String.valueOf(temp));
+                }
+            }
+        }catch (Exception e) {
+            System.out.println(e);
+            e.printStackTrace();
         }
 
-        submsg = new Msg("CmdUpdateNodeStatus", null, "com.testviewer.ui.TestcaseViewer");
-        submsg.SetParam("testcase", this);
-        queue.SendMessage(submsg);
     }
 
     public void CmdStop(Msg msg)
@@ -220,7 +290,6 @@ public class Testcase implements MsgCom {
                 }
 
                 Msg msg = new Msg("CmdShowText", null, "com.testviewer.ui.RunLogViewer");
-                System.out.println(String.valueOf(tempchars).length());
                 msg.SetParam("showString", String.valueOf(tempchars));
                 queue.SendMessage(msg);
             }
