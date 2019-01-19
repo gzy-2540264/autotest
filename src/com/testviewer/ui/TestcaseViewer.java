@@ -1,8 +1,10 @@
 package com.testviewer.ui;
 
+import com.testviewer.common.Common;
 import com.testviewer.common.Msg;
 import com.testviewer.common.MsgCom;
 import com.testviewer.common.MsgQueue;
+import com.testviewer.module.Testcase;
 
 import javax.swing.*;
 import javax.swing.event.CellEditorListener;
@@ -47,8 +49,16 @@ public class TestcaseViewer extends JTree implements MsgCom
                 CheckBoxNode node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
 
                 //设置配置面板
-                Msg msg = new Msg("CmdSetStepViewer", null, GetSelectNodeXpath());
-                query.SendMessage(msg);
+                if (node.isLeaf()) {
+                    Msg msg = new Msg("CmdSetStepViewer", null, GetSelectNodeXpath());
+                    query.SendMessage(msg);
+                }
+                else
+                {
+                    Msg msgSend = new Msg("CmdSetItemSetting", null, "com.testviewer.ui.RunStepViewer");
+                    msgSend.SetParam("testcase", null);
+                    query.SendMessage(msgSend);
+                }
 
                 int hotspot = new JCheckBox().getPreferredSize().width;
                 TreePath path = getPathForLocation(e.getX(), e.getY());
@@ -63,10 +73,16 @@ public class TestcaseViewer extends JTree implements MsgCom
                 if(isSelect)
                 {
                     node.SetSelect(false);
+                    Msg msg = new Msg("CmdSetTestcaseRun", null, GetSelectNodeXpath());
+                    msg.SetParam("isTestcaseRun", false);
+                    query.SendMessage(msg);
                 }
                 else
                 {
                     node.SetSelect(true);
+                    Msg msg = new Msg("CmdSetTestcaseRun", null, GetSelectNodeXpath());
+                    msg.SetParam("isTestcaseRun", true);
+                    query.SendMessage(msg);
                 }
                 repaint();
             }
@@ -149,25 +165,30 @@ public class TestcaseViewer extends JTree implements MsgCom
     public void CmdAddNode(Msg msg)
     {
         AddTreeNode((CheckBoxNode)root, (String)msg.GetParam("nodeXpath"));
+
         //不知道为什么，如果不展开的话，后面就无法展开了
         expandRow(0);
         repaint();
 
     }
 
-    private int GetCheckBoxStartX()
+    public void CmdSetNodeSelect(Msg msg)
     {
-        CheckBoxNode node = null;
-        try {
-            node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
-        }
-        catch (Exception es)
-        {
-            return -1;
-        }
+        String nodeXpath = (String)msg.GetParam("nodeXpath");
+        Boolean isTestcaseRun = (Boolean)msg.GetParam("isTestcaseRun");
 
-        CheckBoxNode root = (CheckBoxNode)node.getRoot();
-        return (root.getDepth() - node.getDepth()) * 20;
+        CheckBoxNode node = GetNodeByXPath((CheckBoxNode) root, nodeXpath);
+        if (node!=null)
+        {
+            node.SetSelect(isTestcaseRun);
+        }
+    }
+
+    public void CmdReset(Msg msg)
+    {
+        root = new CheckBoxNode("测试用例");
+        setModel(new DefaultTreeModel(root));
+        repaint();
     }
 
     private void AddPopMenu()
@@ -177,11 +198,6 @@ public class TestcaseViewer extends JTree implements MsgCom
         this.popMenu = popupMenu;
     }
 
-    private static CheckBoxNode AddTestNode()
-    {
-        CheckBoxNode node = new CheckBoxNode("测试用例");
-        return node;
-    }
 
     @Override
     public String GetComId() {
@@ -212,6 +228,89 @@ public class TestcaseViewer extends JTree implements MsgCom
         return rspStrBuff.toString();
     }
 
+    public String GetNodeXpath(CheckBoxNode node)
+    {
+        TreeNode[] path =  node.getPath();
+        StringBuffer rspStrBuff = new StringBuffer();
+        for (TreeNode subNode : path) {
+            if(subNode==root)
+            {
+                continue;
+            }
+            if (rspStrBuff.length()==0) {
+                rspStrBuff.append(subNode.toString());
+            }
+            else
+            {
+                rspStrBuff.append("/");
+                rspStrBuff.append(subNode.toString());
+            }
+        }
+        return rspStrBuff.toString();
+    }
+
+    public CheckBoxNode GetNodeByXPath(CheckBoxNode rootNode, String nodeXpath)
+    {
+        String[] nodeList = nodeXpath.split("/");
+        String curNodeStr = nodeList[0];
+        String nextPath = "";
+        CheckBoxNode rspNode = null;
+        for (int i=0; i<nodeList.length; i++)
+        {
+            if (i==0)
+            {
+                curNodeStr = nodeList[i];
+            }
+            else
+            {
+                if (nextPath.length()==0)
+                {
+                    nextPath = nodeList[i];
+                }
+                else {
+                    nextPath = nextPath + "/" + nodeList[i];
+                }
+            }
+        }
+
+        if (rootNode==root)
+        {
+            for(int i=0; i<rootNode.getChildCount(); i++)
+            {
+                if(rootNode.getChildAt(i).toString().equals(curNodeStr))
+                {
+                    rspNode = GetNodeByXPath((CheckBoxNode) rootNode.getChildAt(i), nextPath);
+                    break;
+                }
+            }
+        }
+        if (rspNode!=null)
+        {
+            return rspNode;
+        }
+
+
+        for(int i=0; i<rootNode.getChildCount(); i++)
+        {
+            if(rootNode.getChildAt(i).toString().equals(curNodeStr))
+            {
+                if (nextPath.length()==0)
+                {
+                    rspNode =(CheckBoxNode) rootNode.getChildAt(i);
+                }
+                else
+                {
+                    rspNode = GetNodeByXPath((CheckBoxNode) rootNode.getChildAt(i), nextPath);
+                }
+                if (rspNode!=null)
+                {
+                    break;
+                }
+            }
+        }
+        return rspNode;
+    }
+
     public void ShowFileCode()
     {
         Msg msg = new Msg("CmdShowFileCode", null, GetSelectNodeXpath());
@@ -222,19 +321,34 @@ public class TestcaseViewer extends JTree implements MsgCom
 class CheckBoxNode extends DefaultMutableTreeNode
 {
     private boolean isSelect = false;
-    public CheckBoxNode(String NodeStr)
+    public CheckBoxNode(String nodeStr)
     {
-        super(NodeStr);
+        super(nodeStr);
+    }
+
+    public void SignSetSelect(boolean isSelect)
+    {
+        this.isSelect = isSelect;
     }
 
     public void SetSelect(boolean isSelect)
     {
+
         this.isSelect = isSelect;
+
         int count = getChildCount();
         for (int i=0; i<count; i++) {
             CheckBoxNode subNode = (CheckBoxNode) getChildAt(i);
             subNode.SetSelect(isSelect);
         }
+
+        // 子结点选择，父结点必须选择，反之不亦然
+        CheckBoxNode parent = (CheckBoxNode)getParent();
+        if (isSelect==true && parent!=null)
+        {
+            parent.SignSetSelect(isSelect);
+        }
+
     }
 
     public boolean GetSelect()
@@ -243,6 +357,7 @@ class CheckBoxNode extends DefaultMutableTreeNode
     }
 }
 
+/*
 class CheckBoxCellEditer extends AbstractCellEditor implements TreeCellEditor
 {
     JTree tree = null;
@@ -317,7 +432,7 @@ class CheckBoxCellEditer extends AbstractCellEditor implements TreeCellEditor
         return checkBox.isSelected();
     }
 }
-
+*/
 class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
 {
     private JCheckBox checkBox = null;
@@ -347,19 +462,20 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
         }
 
         label.setText(value.toString());
+        String curPath = Common.GetCurDir();
         if (leaf==false && expanded==false)
         {
-            ImageIcon icon = new ImageIcon("C:\\Users\\timmy\\Desktop\\JDemo\\TestViewer\\resource\\dir_close.PNG");
+            ImageIcon icon = new ImageIcon(curPath + "\\resource\\dir_close.PNG");
             label.setIcon(icon);
         }
         else if(leaf==false && expanded==true)
         {
-            ImageIcon icon = new ImageIcon("C:\\Users\\timmy\\Desktop\\JDemo\\TestViewer\\resource\\dir_open.PNG");
+            ImageIcon icon = new ImageIcon(curPath + "\\resource\\dir_open.PNG");
             label.setIcon(icon);
         }
         else
         {
-            ImageIcon icon = new ImageIcon("C:\\Users\\timmy\\Desktop\\JDemo\\TestViewer\\resource\\fail.PNG");
+            ImageIcon icon = new ImageIcon(curPath + "\\resource\\idle.PNG");
             label.setIcon(icon);
         }
         return this;
@@ -379,8 +495,8 @@ class TestcasePopMenu extends JPopupMenu
     private HashMap<MenuMode, boolean[]> modeDefine = new HashMap<MenuMode, boolean[]>(){
         {put(MenuMode.LEAF_IDLE,    new boolean[]{true, false, true});
         put(MenuMode.LEAF_RUNNING, new boolean[]{false, true, false});
-        put(MenuMode.DIR_IDLE,     new boolean[]{true, true, false});
-        put(MenuMode.DIR_RUNNING,  new boolean[]{false, false, false});}
+        put(MenuMode.DIR_IDLE,     new boolean[]{true, false, false});
+        put(MenuMode.DIR_RUNNING,  new boolean[]{false, true, false});}
     };
     TestcaseViewer parentTree = null;
 
@@ -408,6 +524,7 @@ class TestcasePopMenu extends JPopupMenu
         {
             JMenuItem item = (JMenuItem)getComponent(index);
             item.setEnabled(menuEnble);
+            index += 1;
         }
     }
 

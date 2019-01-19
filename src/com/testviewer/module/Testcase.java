@@ -14,6 +14,7 @@ public class Testcase implements MsgCom {
     private String testRunLogPath = null;      //脚本执行日志存放目录
     private String runCmd = null;          //脚本运行命令
     private int runTimes = 0;               //脚本运行次数
+    private boolean isTestcaseRun = false;  //脚本是否执行
     private boolean isFailStop = false;     //失败后是否继续执行
     private int runTimeout = 60 * 10;       //脚本执行超时时间
     private String passCheckPattern = null; //脚本执行成功日志样式
@@ -101,6 +102,14 @@ public class Testcase implements MsgCom {
         this.runTimes = runTimes;
     }
 
+    public boolean isTestcaseRun() {
+        return isTestcaseRun;
+    }
+
+    public void setTestcaseRun(boolean isTestcaseRun) {
+        this.isTestcaseRun = isTestcaseRun;
+    }
+
     public boolean isFailStop() {
         return isFailStop;
     }
@@ -133,19 +142,20 @@ public class Testcase implements MsgCom {
         this.curStatus = curStatus;
     }
 
-    public void CmdSetStepViewer(Msg msg)
-    {
-        Msg msgSend = new Msg("CmdSetItemSetting", null, "com.testviewer.ui.RunStepViewer");
-        msgSend.SetParam("testcase", this);
-        queue.SendMessage(msgSend);
-    }
-
     public String GetTreeXpath()
     {
         String xpath = testScriptPath.substring(projectPath.length() + 1, testScriptPath.length() - 3);
         String rspString =  xpath.replace("\\", "/");
         return rspString;
 
+    }
+
+    public String GetTreeNodeName()
+    {
+        String nodeXpath = GetTreeXpath();
+        String[] nodeList = nodeXpath.split("/");
+        String curNodeStr = nodeList[nodeList.length - 1];
+        return curNodeStr;
     }
 
     public String getProjectPath() {
@@ -188,5 +198,18 @@ public class Testcase implements MsgCom {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void CmdSetTestcaseRun(Msg msg)
+    {
+        Boolean getflag = (Boolean)msg.GetParam("isTestcaseRun");
+        setTestcaseRun(getflag);
+    }
+
+    public void CmdSetStepViewer(Msg msg)
+    {
+        Msg msgSend = new Msg("CmdSetItemSetting", null, "com.testviewer.ui.RunStepViewer");
+        msgSend.SetParam("testcase", this);
+        queue.SendMessage(msgSend);
     }
 }

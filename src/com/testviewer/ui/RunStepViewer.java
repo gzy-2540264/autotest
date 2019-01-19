@@ -12,6 +12,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
+import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.util.Vector;
 
@@ -31,6 +32,13 @@ public class RunStepViewer extends JPanel implements MsgCom {
     {
         Testcase testcase = (Testcase) msg.GetParam("testcase");
         TableModel tableModel = new TestcaseTableMode(testcase);
+        table.setModel(tableModel);
+        repaint();
+    }
+
+    public void CmdReset(Msg msg)
+    {
+        TableModel tableModel = new TestcaseTableMode(null);
         table.setModel(tableModel);
         repaint();
     }
@@ -58,6 +66,10 @@ class TestcaseTableMode implements TableModel {
 
     @Override
     public int getRowCount() {
+        if (testcase==null)
+        {
+            return 0;
+        }
         return fieldNames.length;
     }
 
@@ -91,6 +103,11 @@ class TestcaseTableMode implements TableModel {
 
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
+        if (testcase==null)
+        {
+            return "";
+        }
+
         Object rspObj = null;
         if (columnIndex==0) {
             rspObj = fieldNames[rowIndex];
@@ -144,6 +161,10 @@ class TestcaseTableMode implements TableModel {
 
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
+        if (testcase==null)
+        {
+            return;
+        }
         if (columnIndex!=1)
         {
             return;

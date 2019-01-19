@@ -23,14 +23,17 @@ public class MainMenu extends JMenu implements MsgCom {
 
     private JMenuItem importXml = null;
     private JMenuItem exportXml = null;
+    private JMenuItem saveXml = null;
     private JMenuItem openDir = null;
     private JMenuItem closeDir = null;
     private JMenuItem exitSystem = null;
+    String saveXmlFile = null;
 
     public MainMenu()
     {
         super("文件");
         setOpenXmlItem();
+        setSaveAsTestcasePathItem();
         setSaveTestcasePathItem();
         addSeparator();
 
@@ -95,6 +98,7 @@ public class MainMenu extends JMenu implements MsgCom {
                 try {
                     Testsuit.LoadFromXml(file.getPath());
                     SetMenuMode(MENU_MODE.MENU_MODE_READ_PROJECT);
+                    saveXmlFile = file.getPath();
                 } catch (Exception e1) {
                     e1.printStackTrace();
                 }
@@ -106,9 +110,57 @@ public class MainMenu extends JMenu implements MsgCom {
 
     private void setSaveTestcasePathItem()
     {
-        exportXml = new JMenuItem("保存工程(xml)");
-        exportXml.addActionListener(new ActionListener() {
+        saveXml = new JMenuItem("保存工程(xml)");
+        saveXml.addActionListener(new ActionListener() {
 
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (saveXmlFile == null)
+                {
+                    JFileChooser fileChooser = new JFileChooser();
+                    fileChooser.setFileSelectionMode(JFileChooser.SAVE_DIALOG |JFileChooser.DIRECTORIES_ONLY);
+                    fileChooser.setFileFilter(new FileFilter() {
+                        @Override
+                        public boolean accept(File f) {
+                            if (f.isDirectory())
+                            {
+                                return false;
+                            }
+                            else
+                            {
+                                String name = f.getName();
+                                if (name.endsWith(".xml"))
+                                {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        }
+
+                        @Override
+                        public String getDescription() {
+                            return "*.xml";
+                        }
+                    });
+
+                    fileChooser.showOpenDialog(null);
+                    File xmlPath = fileChooser.getSelectedFile();
+                    String xmlAbsPath = xmlPath.getAbsolutePath();
+                    saveXmlFile = xmlAbsPath;
+                }
+
+                Msg msg = new Msg("CmdSaveToXml", null, "com.testviewer.module.Testsuit");
+                msg.SetParam("xmlPath", saveXmlFile);
+                query.SendMessage(msg);
+            }
+        });
+        add(saveXml);
+    }
+
+    private void setSaveAsTestcasePathItem()
+    {
+        exportXml = new JMenuItem("另存工程(xml)");
+        exportXml.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JFileChooser fileChooser = new JFileChooser();
@@ -140,10 +192,10 @@ public class MainMenu extends JMenu implements MsgCom {
                 File xmlPath = fileChooser.getSelectedFile();
                 String xmlAbsPath = xmlPath.getAbsolutePath();
 
-
                 Msg msg = new Msg("CmdSaveToXml", null, "com.testviewer.module.Testsuit");
                 msg.SetParam("xmlPath", xmlAbsPath);
                 query.SendMessage(msg);
+                saveXmlFile = xmlAbsPath;
             }
         });
         add(exportXml);
@@ -195,7 +247,24 @@ public class MainMenu extends JMenu implements MsgCom {
     private void setCloseTestcasePathItem()
     {
         closeDir = new JMenuItem("关闭文件");
+        closeDir.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Msg msg = new Msg("CmdReset", null, "com.testviewer.ui.RunLogViewer");
+                query.SendMessage(msg);
 
+                msg = new Msg("CmdReset", null, "com.testviewer.ui.RunStepViewer");
+                query.SendMessage(msg);
+
+                msg = new Msg("CmdReset", null, "com.testviewer.ui.TestcaseViewer");
+                query.SendMessage(msg);
+
+                msg = new Msg("CmdReset", null, "com.testviewer.module.Testsuit");
+                query.SendMessage(msg);
+
+                SetMenuMode(MENU_MODE.MENU_MODE_INIT);
+            }
+        });
         // 删除所有testcase
         add(closeDir);
     }
@@ -209,6 +278,7 @@ public class MainMenu extends JMenu implements MsgCom {
                 exportXml.setEnabled(false);
                 openDir.setEnabled(true);
                 closeDir.setEnabled(false);
+                saveXml.setEnabled(false);
                 exitSystem.setEnabled(true);
                 break;
             case MENU_MODE_READ_PROJECT:
@@ -216,6 +286,7 @@ public class MainMenu extends JMenu implements MsgCom {
                 exportXml.setEnabled(true);
                 openDir.setEnabled(false);
                 closeDir.setEnabled(true);
+                saveXml.setEnabled(true);
                 exitSystem.setEnabled(true);
                 break;
         }

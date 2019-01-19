@@ -1,15 +1,12 @@
 package com.testviewer.module;
 
-import com.testviewer.common.Msg;
-import com.testviewer.common.MsgCom;
-import com.testviewer.common.MsgQueue;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import com.testviewer.common.*;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.testviewer.common.ShellClient;
-import com.testviewer.common.Common;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -124,6 +121,7 @@ public class Testsuit implements MsgCom{
         Testsuit suit = mapper.readValue(new File(xmlPath),
                 new TypeReference<Testsuit>(){});
         suit.SetTreeView();
+        suit.SystoTestcaseViewer();
         return suit;
     }
 
@@ -136,7 +134,6 @@ public class Testsuit implements MsgCom{
 
     public void CmdSaveToXml(Msg msg)
     {
-
         String xmlPath = (String)msg.GetParam("xmlPath");
         System.out.println("start save to xml file:" + xmlPath);
         try {
@@ -146,6 +143,19 @@ public class Testsuit implements MsgCom{
         }
     }
 
+    public void CmdRunTestcases(Msg msg)
+    {
+
+    }
+
+    public void CmdReset(Msg msg)
+    {
+        remotePath = null;
+        localPath = null;
+        xmlPath = null;
+        logPaht = null;
+        testcases = new ArrayList<Testcase>();
+    }
 
     static public void main(String[] args)
     {
@@ -167,5 +177,21 @@ public class Testsuit implements MsgCom{
     @Override
     public String GetComId() {
         return getClass().getName();
+    }
+
+    /**
+     * 用例选择数据同步到viewer
+     */
+    public void SystoTestcaseViewer()
+    {
+        for(Testcase testcase : testcases)
+        {
+            Boolean isTestcaseRun = testcase.isTestcaseRun();
+            Msg msg = new Msg("CmdSetNodeSelect", null, "com.testviewer.ui.TestcaseViewer");
+            msg.SetParam("nodeXpath", testcase.GetTreeXpath());
+            msg.SetParam("isTestcaseRun", isTestcaseRun);
+            query.SendMessage(msg);
+        }
+        return;
     }
 }

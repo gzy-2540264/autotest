@@ -37,4 +37,9 @@ public class RunLogViewer extends JTextPane implements MsgCom {
             e.printStackTrace();
         }
     }
+
+    public void CmdReset(Msg msg)
+    {
+        CmdClear(msg);
+    }
 }
