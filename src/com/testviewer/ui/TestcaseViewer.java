@@ -191,6 +191,21 @@ public class TestcaseViewer extends JTree implements MsgCom
         repaint();
     }
 
+    /**
+     * 设置用例节点的状态
+     * @param msg
+     */
+    public void CmdUpdateNodeStatus(Msg msg)
+    {
+        Testcase testcase = (Testcase) msg.GetParam("testcase");
+        CheckBoxNode node = GetNodeByXPath((CheckBoxNode)root, testcase.GetTreeXpath());
+        if (node != null)
+        {
+            node.setTeststatus(testcase.getCurStatus());
+        }
+        repaint();
+    }
+
     private void AddPopMenu()
     {
         TestcasePopMenu popupMenu = new TestcasePopMenu(this);
@@ -316,11 +331,27 @@ public class TestcaseViewer extends JTree implements MsgCom
         Msg msg = new Msg("CmdShowFileCode", null, GetSelectNodeXpath());
         query.SendMessage(msg);
     }
+
+    public void RunTestcase()
+    {
+        CheckBoxNode node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
+        if(node.isLeaf())
+        {
+            Msg msg = new Msg("CmdRun", null, GetSelectNodeXpath());
+            query.SendMessage(msg);
+        }
+        else
+        {
+            //需要发给testsuit,让他来组织执行
+        }
+    }
 }
 
 class CheckBoxNode extends DefaultMutableTreeNode
 {
     private boolean isSelect = false;
+    private Testcase.TESTCASE_STATUS teststatus = Testcase.TESTCASE_STATUS.IDLE;
+
     public CheckBoxNode(String nodeStr)
     {
         super(nodeStr);
@@ -354,6 +385,14 @@ class CheckBoxNode extends DefaultMutableTreeNode
     public boolean GetSelect()
     {
         return isSelect;
+    }
+
+    public Testcase.TESTCASE_STATUS getTeststatus() {
+        return teststatus;
+    }
+
+    public void setTeststatus(Testcase.TESTCASE_STATUS teststatus) {
+        this.teststatus = teststatus;
     }
 }
 
@@ -475,7 +514,24 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
         }
         else
         {
-            ImageIcon icon = new ImageIcon(curPath + "\\resource\\idle.PNG");
+            Testcase.TESTCASE_STATUS status = node.getTeststatus();
+            ImageIcon icon = null;
+            if (status==Testcase.TESTCASE_STATUS.FAILED)
+            {
+                icon = new ImageIcon(curPath + "\\resource\\fail.PNG");
+            }
+            else if(status==Testcase.TESTCASE_STATUS.PASSED)
+            {
+                icon = new ImageIcon(curPath + "\\resource\\pass.PNG");
+            }
+            else if(status==Testcase.TESTCASE_STATUS.ERROR)
+            {
+                icon = new ImageIcon(curPath + "\\resource\\error.PNG");
+            }
+            else
+            {
+                icon = new ImageIcon(curPath + "\\resource\\idle.PNG");
+            }
             label.setIcon(icon);
         }
         return this;
@@ -506,6 +562,7 @@ class TestcasePopMenu extends JPopupMenu
         BuildMenuItems();
         this.parentTree = parentTree;
         SetCodeViewListener();
+        SetTestcaseRunListener();
     }
 
     private void BuildMenuItems() {
@@ -552,6 +609,17 @@ class TestcasePopMenu extends JPopupMenu
             @Override
             public void actionPerformed(ActionEvent e) {
                 parentTree.ShowFileCode();
+            }
+        });
+    }
+
+    public void SetTestcaseRunListener()
+    {
+        JMenuItem item = SearchItemByText("执行");
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                parentTree.RunTestcase();
             }
         });
     }

@@ -1,6 +1,6 @@
 package com.testviewer.common;
 
-import java.io.File;
+import java.io.*;
 import java.util.LinkedList;
 
 public class Common {
@@ -62,6 +62,36 @@ public class Common {
         }
         return hasFile;
     }
+
+    static public String LocalCmd(String command) throws IOException {
+        StringBuffer rspBuff = new StringBuffer();
+        try {
+            Process process = Runtime.getRuntime().exec(command);
+            BufferedInputStream bis = new BufferedInputStream(
+                    process.getInputStream());
+            BufferedReader br = new BufferedReader(new InputStreamReader(bis));
+            String line;
+            while ((line = br.readLine()) != null) {
+                rspBuff.append(line);
+            }
+
+            process.waitFor();
+            if (process.exitValue() != 0) {
+                System.out.println("error!");
+            }
+
+            bis.close();
+            br.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return rspBuff.toString();
+    }
+
 
     static public void main(String[] args)
     {

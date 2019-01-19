@@ -17,7 +17,7 @@ public class Testcase implements MsgCom {
     private boolean isTestcaseRun = false;  //脚本是否执行
     private boolean isFailStop = false;     //失败后是否继续执行
     private int runTimeout = 60 * 10;       //脚本执行超时时间
-    private String passCheckPattern = null; //脚本执行成功日志样式
+    private String passCheckPattern = ""; //脚本执行成功日志样式
     private TESTCASE_STATUS curStatus = TESTCASE_STATUS.IDLE;  //脚本当前状态
 
     private MsgQueue queue = MsgQueue.GetInstance();
@@ -60,12 +60,41 @@ public class Testcase implements MsgCom {
         return path + "/log/";
     }
 
-    public void run()
+    public void CmdRun(Msg msg)
     {
+        setCurStatus(TESTCASE_STATUS.RUNNING);
+        String out = "";
+        try {
+            out = Common.LocalCmd(runCmd);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+        Msg submsg = new Msg("CmdClear", null, "com.testviewer.ui.RunLogViewer");
+        queue.SendMessage(submsg);
+
+        submsg = new Msg("CmdShowText", null, "com.testviewer.ui.RunLogViewer");
+        submsg.SetParam("showString", out);
+        queue.SendMessage(submsg);
+        if(out==null)
+        {
+            setCurStatus(TESTCASE_STATUS.ERROR);
+        }
+        else if(out.endsWith(passCheckPattern))
+        {
+            setCurStatus(TESTCASE_STATUS.PASSED);
+        }
+        else
+        {
+            setCurStatus(TESTCASE_STATUS.FAILED);
+        }
+
+        submsg = new Msg("CmdUpdateNodeStatus", null, "com.testviewer.ui.TestcaseViewer");
+        submsg.SetParam("testcase", this);
+        queue.SendMessage(submsg);
     }
 
-    public void stop()
+    public void CmdStop(Msg msg)
     {
 
     }
