@@ -14,7 +14,7 @@ public class TestThreadPool implements Runnable{
     static public void main(String[] args)
     {
         TestThreadPool test = new TestThreadPool();
-        ThreadPool pool = new ThreadPool();
+        ThreadPool pool = ThreadPool.GetInstance();
         try {
             pool.registTick(test.getClass().getMethod("PrintTemp"), test);
         } catch (NoSuchMethodException e) {

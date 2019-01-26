@@ -6,7 +6,10 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+//单例模式
 public class ThreadPool implements Runnable{
+
+    private static ThreadPool instance = null;
     static final long TICK_TIME = 10;
     private ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(100);
     private ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(2, 5,
@@ -14,7 +17,16 @@ public class ThreadPool implements Runnable{
 
     private ArrayList<TickFuncInfo> tickFuncList = new ArrayList<TickFuncInfo>();
 
-    public ThreadPool()
+    static public ThreadPool GetInstance()
+    {
+        if(instance==null)
+        {
+            instance = new ThreadPool();
+        }
+        return instance;
+    }
+
+    private ThreadPool()
     {
         poolExecutor.execute(this);
     }

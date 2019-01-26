@@ -18,6 +18,8 @@ public class Testcase implements MsgCom, Runnable {
     private String passCheckPattern = ""; //脚本执行成功日志样式
     private TESTCASE_STATUS curStatus = TESTCASE_STATUS.IDLE;  //脚本当前状态
 
+    //以下成员变量只同任务执行相关，不是javabean成员数据
+
     ThreadPool threadPool = null;
     Process process = null;
     ThreadPool.TickFuncInfo tickHand = null;
@@ -90,7 +92,7 @@ public class Testcase implements MsgCom, Runnable {
         queue.SendMessage(submsg);
 
 
-        threadPool = new ThreadPool();
+        threadPool = ThreadPool.GetInstance();
         try {
             threadPool.registTask(this);
             tickHand = threadPool.registTick(getClass().getMethod("MonitorTick"),this);
