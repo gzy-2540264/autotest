@@ -29,18 +29,29 @@ public class ThreadPool implements Runnable{
     private ThreadPool()
     {
         poolExecutor.execute(this);
+
     }
 
-    public TickFuncInfo registTick(Method method, Object obj)
+    /**
+     * 返回tick函数的注册句柄，在反注册的时候使用
+     * @param method
+     * @param obj
+     * @return
+     */
+    public Object registTick(Method method, Object obj)
     {
         TickFuncInfo hand = new TickFuncInfo(method, obj);
         tickFuncList.add(hand);
         return hand;
     }
 
-    public void unRegistTick(TickFuncInfo hand)
+    public void unRegistTick(Object hand)
     {
-        hand.isEndTick = true;
+        if (null==hand)
+            return;
+
+        TickFuncInfo temp = (TickFuncInfo)hand;
+        temp.isEndTick = true;
     }
 
     public void registTask(Runnable runnable) throws InterruptedException {

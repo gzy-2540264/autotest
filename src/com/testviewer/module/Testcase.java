@@ -19,11 +19,11 @@ public class Testcase implements MsgCom, Runnable {
     private TESTCASE_STATUS curStatus = TESTCASE_STATUS.IDLE;  //脚本当前状态
 
     //以下成员变量只同任务执行相关，不是javabean成员数据
-
-    ThreadPool threadPool = null;
-    Process process = null;
-    ThreadPool.TickFuncInfo tickHand = null;
-    boolean isThreadEnd = true;
+    ThreadPool threadPool = ThreadPool.GetInstance();
+    InputStream in = null;
+    Object tickHand = null;
+    boolean isTaskRunning = false;
+    StringBuffer logBuff = null;
 
 
     private MsgQueue queue = MsgQueue.GetInstance();
@@ -37,12 +37,16 @@ public class Testcase implements MsgCom, Runnable {
     public void run() {
         Runtime rt = Runtime.getRuntime();
         try {
-            process = rt.exec(runCmd);
+            logBuff = new StringBuffer();
+            Process p = rt.exec(runCmd);
+            in = p.getInputStream();
+            isTaskRunning = true;
+            p.waitFor();
+            isTaskRunning = false;
         } catch (Exception e) {
-            process = null;
+            isTaskRunning = false;
             e.printStackTrace();
         }
-        isThreadEnd = true;
     }
 
     public enum TESTCASE_STATUS{
@@ -83,6 +87,7 @@ public class Testcase implements MsgCom, Runnable {
     {
         setCurStatus(TESTCASE_STATUS.RUNNING);
 
+        //设置两个显示的状态
         Msg submsg = new Msg("CmdUpdateNodeStatus", null, "com.testviewer.ui.TestcaseViewer");
         submsg.SetParam("testcase", this);
         queue.SendMessage(submsg);
@@ -92,14 +97,12 @@ public class Testcase implements MsgCom, Runnable {
         queue.SendMessage(submsg);
 
 
-        threadPool = ThreadPool.GetInstance();
         try {
             threadPool.registTask(this);
+            Thread.sleep(100);
             tickHand = threadPool.registTick(getClass().getMethod("MonitorTick"),this);
-            isThreadEnd = false;
         } catch (Exception e) {
             e.printStackTrace();
-            isThreadEnd = true;
         }
     }
 
@@ -111,6 +114,7 @@ public class Testcase implements MsgCom, Runnable {
         boolean isResultPass =  false;
         if(passCheckPattern != null && passCheckPattern.length()>0)
         {
+            logStr = logStr.trim();
             if(logStr.endsWith(passCheckPattern))
             {
                 isResultPass = true;
@@ -138,26 +142,29 @@ public class Testcase implements MsgCom, Runnable {
 
     public void MonitorTick()
     {
-        if (process==null)
+        if (isTaskRunning==false && null != tickHand)
+        {
+            threadPool.unRegistTick(tickHand);
+            tickHand = null;
+            CheckTestcaseResult(logBuff.toString());
+        }
+
+        if (in==null)
         {
             return;
         }
         byte[] b = new byte[10240];
         try {
             Arrays.fill(b, (byte)0);
-            InputStream in = process.getInputStream();
             in.read(b);
             String temp = new String(b, "GBK");
             temp = temp.trim();
             if (temp.length()>0) {
+                String sendStr = String.valueOf(temp) + "\n";
+                logBuff.append(sendStr);
                 Msg msg = new Msg("CmdShowText", null, "com.testviewer.ui.RunLogViewer");
-                msg.SetParam("showString", String.valueOf(temp));
+                msg.SetParam("showString", sendStr);
                 queue.SendMessage(msg);
-
-                if (isThreadEnd)
-                {
-                    CheckTestcaseResult(String.valueOf(temp));
-                }
             }
         }catch (Exception e) {
             System.out.println(e);
