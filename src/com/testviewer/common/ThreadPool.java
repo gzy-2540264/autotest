@@ -16,6 +16,7 @@ public class ThreadPool implements Runnable{
             600, TimeUnit.SECONDS, workQueue);
 
     private ArrayList<TickFuncInfo> tickFuncList = new ArrayList<TickFuncInfo>();
+    private ArrayList<TickFuncInfo> newTickFuncList = new ArrayList<TickFuncInfo>();
 
     static public ThreadPool GetInstance()
     {
@@ -41,7 +42,7 @@ public class ThreadPool implements Runnable{
     public Object registTick(Method method, Object obj)
     {
         TickFuncInfo hand = new TickFuncInfo(method, obj);
-        tickFuncList.add(hand);
+        newTickFuncList.add(hand);
         return hand;
     }
 
@@ -80,6 +81,12 @@ public class ThreadPool implements Runnable{
             {
                 tickFuncList.remove(funcInfo);
             }
+
+            for(TickFuncInfo funcInfo: newTickFuncList)
+            {
+                tickFuncList.add(funcInfo);
+            }
+            newTickFuncList.clear();
 
             long timeEnd = System.currentTimeMillis();
             long timeCost = timeEnd - timeStart;

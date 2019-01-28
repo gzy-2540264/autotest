@@ -88,7 +88,7 @@ public class Testcase implements MsgCom, Runnable {
         setCurStatus(TESTCASE_STATUS.RUNNING);
 
         //设置两个显示的状态
-        Msg submsg = new Msg("CmdUpdateNodeStatus", null, "com.testviewer.ui.TestcaseViewer");
+        Msg submsg = new Msg("CmdModeToViewSys", null, "com.testviewer.ui.TestcaseViewer");
         submsg.SetParam("testcase", this);
         queue.SendMessage(submsg);
 
@@ -128,7 +128,7 @@ public class Testcase implements MsgCom, Runnable {
             setCurStatus(TESTCASE_STATUS.PASSED);
         }
 
-        Msg msg = new Msg("CmdUpdateNodeStatus", null, "com.testviewer.ui.TestcaseViewer");
+        Msg msg = new Msg("CmdModeToViewSys", null, "com.testviewer.ui.TestcaseViewer");
         msg.SetParam("testcase", this);
         queue.SendMessage(msg);
 

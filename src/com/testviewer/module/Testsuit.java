@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import org.omg.PortableInterceptor.SYSTEM_EXCEPTION;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -21,7 +22,13 @@ public class Testsuit implements MsgCom{
     private String xmlPath = null;
     private String logPaht = null;
     private List<Testcase> testcases = new ArrayList<Testcase>();
+
     MsgQueue query = MsgQueue.GetInstance();
+
+    //任务执行相关
+    private ThreadPool threadPool = ThreadPool.GetInstance();
+    private List<Testcase> waitRuntestcases = new ArrayList<Testcase>();
+    private Object tickHand = null;
 
     public void PrintInfo() {
         for(Testcase testcase : testcases)
@@ -145,7 +152,67 @@ public class Testsuit implements MsgCom{
 
     public void CmdRunTestcases(Msg msg)
     {
+        String xpath = (String)msg.GetParam("xpath");
+        for(Testcase testcase : testcases)
+        {
+            String testcaseXpath = testcase.GetTreeXpath();
+            if (testcaseXpath.startsWith(xpath) && testcase.isTestcaseRun())
+            {
+                testcase.setCurStatus(Testcase.TESTCASE_STATUS.IDLE);
+                waitRuntestcases.add(testcase);
+            }
+        }
 
+
+        if (waitRuntestcases.size()>0)
+        {
+            Msg submsg = new Msg("CmdClear", null, "com.testviewer.ui.RunLogViewer");
+            query.SendMessage(submsg);
+
+            SystoTestcaseViewer();
+            try {
+                tickHand = threadPool.registTick(getClass().getMethod("TickRuncaseOneByOne"),this);
+            } catch (NoSuchMethodException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void TickRuncaseOneByOne()
+    {
+        if (waitRuntestcases.size() == 0)
+        {
+            threadPool.unRegistTick(tickHand);
+        }
+        //如果有用例处于执行状态，则返回
+        for(Testcase testcase : waitRuntestcases)
+        {
+            if (testcase.getCurStatus()==Testcase.TESTCASE_STATUS.RUNNING)
+            {
+                return;
+            }
+        }
+
+        List<Testcase> completeTestcase = new ArrayList<Testcase>();
+        for(Testcase testcase : waitRuntestcases)
+        {
+            if (testcase.getCurStatus()==Testcase.TESTCASE_STATUS.IDLE)
+            {
+                testcase.CmdRun(null);
+                return;
+            }
+            //说明用例已经执行完成
+            if (testcase.getCurStatus()!=Testcase.TESTCASE_STATUS.RUNNING
+                    && testcase.getCurStatus()!=Testcase.TESTCASE_STATUS.IDLE )
+            {
+                completeTestcase.add(testcase);
+            }
+        }
+
+        for(Testcase testcase : completeTestcase)
+        {
+            waitRuntestcases.remove(testcase);
+        }
     }
 
     public void CmdReset(Msg msg)
@@ -187,9 +254,8 @@ public class Testsuit implements MsgCom{
         for(Testcase testcase : testcases)
         {
             Boolean isTestcaseRun = testcase.isTestcaseRun();
-            Msg msg = new Msg("CmdSetNodeSelect", null, "com.testviewer.ui.TestcaseViewer");
-            msg.SetParam("nodeXpath", testcase.GetTreeXpath());
-            msg.SetParam("isTestcaseRun", isTestcaseRun);
+            Msg msg = new Msg("CmdModeToViewSys", null, "com.testviewer.ui.TestcaseViewer");
+            msg.SetParam("testcase", testcase);
             query.SendMessage(msg);
         }
         return;

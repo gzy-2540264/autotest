@@ -33,8 +33,6 @@ public class TestcaseViewer extends JTree implements MsgCom
         CheckBoxCellRenderer renderer = new CheckBoxCellRenderer();
         setCellRenderer(renderer);
 
-//        setCellEditor(new CheckBoxCellEditer(this));
-//        setEditable(true);
         AddPopMenu();
         query.RegistCom(this);
 
@@ -191,18 +189,13 @@ public class TestcaseViewer extends JTree implements MsgCom
         repaint();
     }
 
-    /**
-     * 设置用例节点的状态
-     * @param msg
-     */
-    public void CmdUpdateNodeStatus(Msg msg)
+
+    public void CmdModeToViewSys(Msg msg)
     {
         Testcase testcase = (Testcase) msg.GetParam("testcase");
         CheckBoxNode node = GetNodeByXPath((CheckBoxNode)root, testcase.GetTreeXpath());
-        if (node != null)
-        {
-            node.setTeststatus(testcase.getCurStatus());
-        }
+        node.setTeststatus(testcase.getCurStatus());
+        node.SetSelect(testcase.isTestcaseRun());
         repaint();
     }
 
@@ -342,7 +335,10 @@ public class TestcaseViewer extends JTree implements MsgCom
         }
         else
         {
-            //需要发给testsuit,让他来组织执行
+            //需要发给testsuit,让他来组织执行CmdRunTestcases
+            Msg msg = new Msg("CmdRunTestcases", null, "com.testviewer.module.Testsuit");
+            msg.SetParam("xpath", GetSelectNodeXpath());
+            query.SendMessage(msg);
         }
     }
 }
@@ -527,6 +523,10 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
             else if(status==Testcase.TESTCASE_STATUS.ERROR)
             {
                 icon = new ImageIcon(curPath + "\\resource\\error.PNG");
+            }
+            else if(status==Testcase.TESTCASE_STATUS.RUNNING)
+            {
+                icon = new ImageIcon(curPath + "\\resource\\run.PNG");
             }
             else
             {
