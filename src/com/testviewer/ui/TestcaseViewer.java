@@ -17,6 +17,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -500,39 +501,43 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
         String curPath = Common.GetCurDir();
         if (leaf==false && expanded==false)
         {
-            ImageIcon icon = new ImageIcon(curPath + "\\resource\\dir_close.PNG");
+            URL fileURL = this.getClass().getResource("/resource/dir_close.PNG");
+            ImageIcon icon = new ImageIcon(fileURL.getPath());
             label.setIcon(icon);
         }
         else if(leaf==false && expanded==true)
         {
-            ImageIcon icon = new ImageIcon(curPath + "\\resource\\dir_open.PNG");
+            URL fileURL = this.getClass().getResource("/resource/dir_open.PNG");
+            ImageIcon icon = new ImageIcon(fileURL.getPath());
             label.setIcon(icon);
         }
         else
         {
             Testcase.TESTCASE_STATUS status = node.getTeststatus();
-            ImageIcon icon = null;
+            String sourcePath = null;
             if (status==Testcase.TESTCASE_STATUS.FAILED)
             {
-                icon = new ImageIcon(curPath + "\\resource\\fail.PNG");
+                sourcePath = "/resource/fail.PNG";
             }
             else if(status==Testcase.TESTCASE_STATUS.PASSED)
             {
-                icon = new ImageIcon(curPath + "\\resource\\pass.PNG");
+                sourcePath = "/resource/pass.PNG";
             }
             else if(status==Testcase.TESTCASE_STATUS.ERROR)
             {
-                icon = new ImageIcon(curPath + "\\resource\\error.PNG");
+                sourcePath = "/resource/error.PNG";
             }
             else if(status==Testcase.TESTCASE_STATUS.RUNNING)
             {
-                icon = new ImageIcon(curPath + "\\resource\\run.PNG");
+                sourcePath = "/resource/run.PNG";
             }
             else
             {
-                icon = new ImageIcon(curPath + "\\resource\\idle.PNG");
+                sourcePath = "/resource/idle.PNG";
             }
-            label.setIcon(icon);
+            URL fileURL = this.getClass().getResource(sourcePath);
+            System.out.println(fileURL.getPath());
+            label.setIcon(new ImageIcon(fileURL.getPath()));
         }
         return this;
     }
