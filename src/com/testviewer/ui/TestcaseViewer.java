@@ -91,6 +91,7 @@ public class TestcaseViewer extends JTree implements MsgCom
             @Override
             public void valueChanged(TreeSelectionEvent e) {
                 CheckBoxNode node = (CheckBoxNode) e.getPath().getLastPathComponent();
+                Testcase.TESTCASE_STATUS testcase_status = node.getTeststatus();
                 if (node==null)
                 {
                     return;
@@ -98,11 +99,22 @@ public class TestcaseViewer extends JTree implements MsgCom
 
                 if(node.isLeaf())
                 {
-                    popMenu.SetMenuMod(TestcasePopMenu.MenuMode.LEAF_IDLE);
+                    if (testcase_status==Testcase.TESTCASE_STATUS.RUNNING)
+                    {
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.LEAF_RUNNING);
+                    }
+                    else {
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.LEAF_IDLE);
+                    }
                 }
                 else
                 {
-                    popMenu.SetMenuMod(TestcasePopMenu.MenuMode.DIR_IDLE);
+                    if (testcase_status==Testcase.TESTCASE_STATUS.RUNNING) {
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.DIR_RUNNING);
+                    }
+                    else{
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.DIR_IDLE);
+                    }
                 }
             }
         });
@@ -501,14 +513,14 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
         String curPath = Common.GetCurDir();
         if (leaf==false && expanded==false)
         {
-            URL fileURL = this.getClass().getResource("/resource/dir_close.PNG");
-            ImageIcon icon = new ImageIcon(fileURL.getPath());
+            URL fileURL = this.getClass().getResource("/dir_close.PNG");
+            ImageIcon icon = new ImageIcon(fileURL);
             label.setIcon(icon);
         }
         else if(leaf==false && expanded==true)
         {
-            URL fileURL = this.getClass().getResource("/resource/dir_open.PNG");
-            ImageIcon icon = new ImageIcon(fileURL.getPath());
+            URL fileURL = this.getClass().getResource("/dir_open.PNG");
+            ImageIcon icon = new ImageIcon(fileURL);
             label.setIcon(icon);
         }
         else
@@ -517,27 +529,27 @@ class CheckBoxCellRenderer  extends JPanel implements TreeCellRenderer
             String sourcePath = null;
             if (status==Testcase.TESTCASE_STATUS.FAILED)
             {
-                sourcePath = "/resource/fail.PNG";
+                sourcePath = "/fail.PNG";
             }
             else if(status==Testcase.TESTCASE_STATUS.PASSED)
             {
-                sourcePath = "/resource/pass.PNG";
+                sourcePath = "/pass.PNG";
             }
             else if(status==Testcase.TESTCASE_STATUS.ERROR)
             {
-                sourcePath = "/resource/error.PNG";
+                sourcePath = "/error.PNG";
             }
             else if(status==Testcase.TESTCASE_STATUS.RUNNING)
             {
-                sourcePath = "/resource/run.PNG";
+                sourcePath = "/run.PNG";
             }
             else
             {
-                sourcePath = "/resource/idle.PNG";
+                sourcePath = "/idle.PNG";
             }
             URL fileURL = this.getClass().getResource(sourcePath);
-            System.out.println(fileURL.getPath());
-            label.setIcon(new ImageIcon(fileURL.getPath()));
+            System.out.println(fileURL);
+            label.setIcon(new ImageIcon(fileURL));
         }
         return this;
     }
