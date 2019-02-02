@@ -46,6 +46,10 @@ public class TestcaseViewer extends JTree implements MsgCom
                     return;
                 }
                 CheckBoxNode node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
+                if (node==null)
+                {
+                    return;
+                }
 
                 //设置配置面板
                 if (node.isLeaf()) {
@@ -87,15 +91,47 @@ public class TestcaseViewer extends JTree implements MsgCom
             }
         });
 
-        addTreeSelectionListener(new TreeSelectionListener() {
+        addMouseListener(new MouseAdapter() {
             @Override
-            public void valueChanged(TreeSelectionEvent e) {
-                CheckBoxNode node = (CheckBoxNode) e.getPath().getLastPathComponent();
-                Testcase.TESTCASE_STATUS testcase_status = node.getTeststatus();
+            public void mousePressed(MouseEvent e) {
+                super.mousePressed(e);
+                CheckBoxNode node = (CheckBoxNode)getPathForLocation(e.getX(),e.getY()).getLastPathComponent();
                 if (node==null)
                 {
                     return;
                 }
+                Testcase.TESTCASE_STATUS testcase_status = node.getTeststatus();
+                if(node.isLeaf())
+                {
+                    if (testcase_status==Testcase.TESTCASE_STATUS.RUNNING)
+                    {
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.LEAF_RUNNING);
+                    }
+                    else {
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.LEAF_IDLE);
+                    }
+                }
+                else
+                {
+                    if (testcase_status==Testcase.TESTCASE_STATUS.RUNNING) {
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.DIR_RUNNING);
+                    }
+                    else{
+                        popMenu.SetMenuMod(TestcasePopMenu.MenuMode.DIR_IDLE);
+                    }
+                }
+            }
+        });
+
+        addTreeSelectionListener(new TreeSelectionListener() {
+            @Override
+            public void valueChanged(TreeSelectionEvent e) {
+                CheckBoxNode node = (CheckBoxNode) getSelectionPath().getLastPathComponent();
+                if (node==null)
+                {
+                    return;
+                }
+                Testcase.TESTCASE_STATUS testcase_status = node.getTeststatus();
 
                 if(node.isLeaf())
                 {
@@ -118,6 +154,7 @@ public class TestcaseViewer extends JTree implements MsgCom
                 }
             }
         });
+
     }
 
     /**
