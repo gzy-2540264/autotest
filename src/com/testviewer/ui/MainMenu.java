@@ -232,11 +232,12 @@ public class MainMenu extends JMenu implements MsgCom {
                     return;
                 }
 
-                String remotePath = JOptionPane.showInputDialog(null, "远程桌面路径");
-                if (remotePath.length()<=0)
-                {
-                    return;
-                }
+//                String remotePath = JOptionPane.showInputDialog(null, "远程桌面路径");
+//                if (remotePath.length()<=0)
+//                {
+//                    return;
+//                }
+                String remotePath = "";
                 Testsuit  suit = new Testsuit(remotePath, chooseFile.getPath());
                 SetMenuMode(MENU_MODE.MENU_MODE_READ_PROJECT);
             }//public void actionPerformed(ActionEvent e)

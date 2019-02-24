@@ -15,7 +15,7 @@ public class Testcase implements MsgCom, Runnable {
     private boolean isTestcaseRun = false;  //脚本是否执行
     private boolean isFailStop = false;     //失败后是否继续执行
     private int runTimeout = 60 * 10;       //脚本执行超时时间
-    private String passCheckPattern = ""; //脚本执行成功日志样式
+    private String passCheckPattern = "[SUCCESS]"; //脚本执行成功日志样式
     private TESTCASE_STATUS curStatus = TESTCASE_STATUS.IDLE;  //脚本当前状态
 
     //以下成员变量只同任务执行相关，不是javabean成员数据
@@ -96,6 +96,8 @@ public class Testcase implements MsgCom, Runnable {
         submsg.SetParam("testcase", this);
         queue.SendMessage(submsg);
 
+        submsg = new Msg("CmdReset", null, "com.testviewer.ui.RunLogViewer");
+        queue.SendMessage(submsg);
 
         try {
             threadPool.registTask(this);

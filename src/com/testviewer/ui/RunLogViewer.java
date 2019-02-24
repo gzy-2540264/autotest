@@ -8,11 +8,13 @@ import javax.swing.JTextPane;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.text.SimpleAttributeSet;
+import java.awt.*;
 
 public class RunLogViewer extends JTextPane implements MsgCom {
     MsgQueue queue = MsgQueue.GetInstance();
     public RunLogViewer()
     {
+        setFont(new Font("宋体",Font.BOLD,20));
         queue.RegistCom(this);
     }
 
@@ -31,9 +33,12 @@ public class RunLogViewer extends JTextPane implements MsgCom {
         Document document = getDocument();
         SimpleAttributeSet attrset = new SimpleAttributeSet();
         String str = (String)msg.GetParam("showString");
+
         try {
-            document.insertString(document.getLength(), str, attrset);
-        } catch (BadLocationException e) {
+            String decodeStr = new String(str.getBytes("gbk"));
+            document.insertString(document.getLength(), decodeStr, attrset);
+            setCaretPosition(document.getLength());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

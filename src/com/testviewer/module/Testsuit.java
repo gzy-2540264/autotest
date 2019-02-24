@@ -101,12 +101,23 @@ public class Testsuit implements MsgCom{
         query.RegistCom(this);
     }
 
+    private String getFileNameByPath(String fullPath)
+    {
+        int pos = fullPath.lastIndexOf("\\");
+        if (pos>0)
+            return fullPath.substring(pos+1, fullPath.length());
+        return fullPath;
+    }
+
     private void LoadTestcase()
     {
         LinkedList<String> outRspList = new LinkedList<String>();
         Common.RouteDir(this.localPath, ".py", null, outRspList);
         for(String str : outRspList)
         {
+            String fileName = getFileNameByPath(str);
+            if (fileName.startsWith("test_") == false)
+                continue;
             Testcase testcase = new Testcase(str, null, localPath);
             this.testcases.add(testcase);
         }
@@ -115,10 +126,17 @@ public class Testsuit implements MsgCom{
 
     private void SetTreeView()
     {
+        int nodeNum = this.testcases.size();
+        int hasAddNum = 0;
         for(Testcase testcase : this.testcases)
         {
             Msg msg = new Msg("CmdAddNode", GetComId(), "com.testviewer.ui.TestcaseViewer");
             msg.SetParam("nodeXpath", testcase.GetTreeXpath());
+            if (hasAddNum >= nodeNum - 1)
+                msg.SetParam("isLastNode", true);
+            else
+                msg.SetParam("isLastNode", false);
+            hasAddNum = hasAddNum + 1;
             query.SendMessage(msg);
         }
     }

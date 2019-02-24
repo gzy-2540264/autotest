@@ -95,7 +95,12 @@ public class TestcaseViewer extends JTree implements MsgCom
             @Override
             public void mousePressed(MouseEvent e) {
                 super.mousePressed(e);
-                CheckBoxNode node = (CheckBoxNode)getPathForLocation(e.getX(),e.getY()).getLastPathComponent();
+                TreePath treePath = getPathForLocation(e.getX(),e.getY());
+                if (treePath==null)
+                {
+                    return;
+                }
+                CheckBoxNode node = (CheckBoxNode)treePath.getLastPathComponent();
                 if (node==null)
                 {
                     return;
@@ -215,9 +220,11 @@ public class TestcaseViewer extends JTree implements MsgCom
         AddTreeNode((CheckBoxNode)root, (String)msg.GetParam("nodeXpath"));
 
         //不知道为什么，如果不展开的话，后面就无法展开了
-        expandRow(0);
-        repaint();
-
+        Boolean isLastNode = (Boolean)msg.GetParam("isLastNode");
+        if (isLastNode) {
+            expandRow(0);
+            updateUI();
+        }
     }
 
     public void CmdSetNodeSelect(Msg msg)
