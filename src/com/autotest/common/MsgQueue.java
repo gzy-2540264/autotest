@@ -1,13 +1,17 @@
-package com.testviewer.common;
+package com.autotest.common;
 
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
 public class MsgQueue implements Runnable{
     static final int TICK_TIME = 100;
     private List<MsgCom> ComList = new ArrayList<MsgCom>();
     private Queue<Msg> msgQueue = new LinkedList<Msg>();
     private static MsgQueue instance = null;
+    private int maxQueryNum = 0;
 
     private MsgQueue()
     {
@@ -38,6 +42,22 @@ public class MsgQueue implements Runnable{
             return;
 
         ComList.add(msgCom);
+    }
+
+    public int GetQueryProcess()
+    {
+        int totalNode = msgQueue.size();
+        double result = 0.0;
+        if (maxQueryNum < totalNode)
+        {
+            maxQueryNum = totalNode;
+            result = 100.0;
+        }
+        else
+        {
+            result = (totalNode * 100) / maxQueryNum;
+        }
+        return (int)result;
     }
 
     public void UnRegistCom(MsgCom msgCom)

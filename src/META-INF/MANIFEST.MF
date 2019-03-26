@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: com.testviewer.ui.MainFrame
+Main-Class: com.autotest.ui.MainFrame
 

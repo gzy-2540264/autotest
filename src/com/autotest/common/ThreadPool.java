@@ -1,4 +1,4 @@
-package com.testviewer.common;
+package com.autotest.common;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -14,6 +14,7 @@ public class ThreadPool implements Runnable{
     private ArrayBlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<Runnable>(100);
     private ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(2, 5,
             600, TimeUnit.SECONDS, workQueue);
+    private boolean isEndAll = false;
 
     private ArrayList<TickFuncInfo> tickFuncList = new ArrayList<TickFuncInfo>();
     private ArrayList<TickFuncInfo> newTickFuncList = new ArrayList<TickFuncInfo>();
@@ -30,7 +31,6 @@ public class ThreadPool implements Runnable{
     private ThreadPool()
     {
         poolExecutor.execute(this);
-
     }
 
     /**
@@ -57,6 +57,11 @@ public class ThreadPool implements Runnable{
 
     public void registTask(Runnable runnable) throws InterruptedException {
         poolExecutor.execute(runnable);
+    }
+
+    public void EndPool()
+    {
+        isEndAll = true;
     }
 
     @Override
@@ -98,6 +103,11 @@ public class ThreadPool implements Runnable{
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+            }
+
+            if(isEndAll)
+            {
+                break;
             }
         }
     }//end run

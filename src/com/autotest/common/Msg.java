@@ -1,4 +1,4 @@
-package com.testviewer.common;
+package com.autotest.common;
 
 import java.util.HashMap;
 import java.util.Map;

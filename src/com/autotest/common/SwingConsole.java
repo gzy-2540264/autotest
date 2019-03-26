@@ -1,8 +1,7 @@
 //: net/mindview/util/SwingConsole.java
 // Tool for running Swing demos from the
 // console, both applets and JFrames.
-package com.testviewer.common;
-import javafx.scene.control.Tooltip;
+package com.autotest.common;
 
 import javax.swing.*;
 import java.awt.*;

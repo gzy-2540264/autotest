@@ -1,4 +1,4 @@
-package com.testviewer.common;
+package com.autotest.common;
 
 import java.io.*;
 import java.util.LinkedList;
