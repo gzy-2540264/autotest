@@ -17,6 +17,7 @@ public class StepViewer extends JTable implements MsgCom {
         queue = MsgQueue.GetInstance();
         queue.RegistCom(this);
         setModel(new TestcaseTableMode(null));
+        setRowHeight(24);
     }
 
     public void CmdUpdateShow(Msg msg)
