@@ -45,6 +45,8 @@ public class TestcaseNode implements TreeNode, MsgCom {
     private String runCmd = null;
     private String checkPartten = null;
     private int runTimeout = 600;
+    private int failRetryTimes = 3;
+    private int hasRunTime = 0;
     public static ArrayList<TestcaseNode> allNodeList = null;
     private Vector<TestcaseNode> subNodeList = new Vector<TestcaseNode>();
     private ArrayList<TestcaseResult> results = new ArrayList<TestcaseResult>();
@@ -148,6 +150,18 @@ public class TestcaseNode implements TreeNode, MsgCom {
 
     public ArrayList<TestcaseResult> getResults() {
         return results;
+    }
+
+    public int getFailRetryTimes() {
+        return failRetryTimes;
+    }
+
+    public void setFailRetryTimes(int failRetryTimes) {
+        this.failRetryTimes = failRetryTimes;
+    }
+
+    public void setHasRunTime(int hasRunTime) {
+        this.hasRunTime = hasRunTime;
     }
     //------------------------支持序列化  end--------------------------------------
 
@@ -282,6 +296,7 @@ public class TestcaseNode implements TreeNode, MsgCom {
 
     public void EndCallBack()
     {
+        hasRunTime++;
         String logStr = runLogBuff.toString();
         logStr = logStr.trim();
         if(logStr.endsWith(checkPartten))
@@ -290,9 +305,17 @@ public class TestcaseNode implements TreeNode, MsgCom {
         }
         else
         {
+
             status = TESTCASE_STATUS.TESTCASE_FAIL;
+            if(hasRunTime<failRetryTimes)
+            {
+                TestcaseRunGroup group = TestcaseRunGroup.GetInstance();
+                group.Add(this);
+            }
         }
         UpdateUI();
+
+        // 保存日志
         String logFile = getDefaultLogPath();
         try {
             File wf = new File(logFile);
@@ -349,7 +372,6 @@ public class TestcaseNode implements TreeNode, MsgCom {
             {
                 group.Add(node);
             }
-            group.StartRun();
         }
     }
 

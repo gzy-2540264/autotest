@@ -258,6 +258,7 @@ class TestcaseMenu extends JPopupMenu implements MsgCom
             @Override
             public void actionPerformed(ActionEvent e) {
                 TestcaseNode node = (TestcaseNode) tree.getSelectionPath().getLastPathComponent();
+                node.setHasRunTime(0);
                 node.StartRun();
             }
         });

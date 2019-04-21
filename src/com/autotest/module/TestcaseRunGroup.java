@@ -12,18 +12,18 @@ public class TestcaseRunGroup {
     private ThreadPool pool = ThreadPool.GetInstance();
     private Object hand = null;
     private static TestcaseRunGroup groupInstance = null;
-    private TestcaseRunGroup(){}
+    private TestcaseRunGroup(){StartRun();}
 
     public static TestcaseRunGroup GetInstance()
     {
-        if (groupInstance==null)
+        if (TestcaseRunGroup.groupInstance==null)
         {
-            groupInstance = new TestcaseRunGroup();
+            TestcaseRunGroup.groupInstance = new TestcaseRunGroup();
         }
-        return groupInstance;
+        return TestcaseRunGroup.groupInstance;
     }
 
-    public void StartRun()
+    private void StartRun()
     {
         try {
             hand = pool.registTick(getClass().getDeclaredMethod("TickChooseTestNode"), this);

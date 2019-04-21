@@ -77,6 +77,7 @@ public class TestcaseSave {
                     subNode.setRunCmd(info.getRunCmd());
                     subNode.setCheckPartten(info.getCheckPartten());
                     subNode.setRunTimeout(info.getRunTimeout());
+                    subNode.setFailRetryTimes(info.getFailRunTime());
                     break;
                 }
             }
@@ -102,6 +103,7 @@ class TestcaseInfo
     private String checkPartten = null;
     private int runTimeout = 600;
     private TestcaseNode.TESTCASE_STATUS status = TestcaseNode.TESTCASE_STATUS.TESTCASE_IDLE;
+    private int failRunTime = 3;  //在失败以后，重试的次数
     public TestcaseInfo(String testcasePath, boolean isSelect, boolean isRoot, TestcaseNode.TESTCASE_STATUS status,
                         String runCmd, String checkPartten, int runTimeout)
     {
@@ -112,6 +114,19 @@ class TestcaseInfo
         this.runCmd = runCmd;
         this.checkPartten = checkPartten;
         this.runTimeout = runTimeout;
+    }
+
+    public TestcaseInfo(String testcasePath, boolean isSelect, boolean isRoot, TestcaseNode.TESTCASE_STATUS status,
+                        String runCmd, String checkPartten, int runTimeout, int failRunTime)
+    {
+        this.testcasePath = testcasePath;
+        this.isSelect = isSelect;
+        this.status = status;
+        this.isRoot = isRoot;
+        this.runCmd = runCmd;
+        this.checkPartten = checkPartten;
+        this.runTimeout = runTimeout;
+        this.failRunTime = failRunTime;
     }
 
     public TestcaseInfo(){}
@@ -170,5 +185,13 @@ class TestcaseInfo
 
     public void setRunTimeout(int runTimeout) {
         this.runTimeout = runTimeout;
+    }
+
+    public int getFailRunTime() {
+        return failRunTime;
+    }
+
+    public void setFailRunTime(int failRunTime) {
+        this.failRunTime = failRunTime;
     }
 }

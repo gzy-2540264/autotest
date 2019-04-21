@@ -37,8 +37,9 @@ public class StepViewer extends JTable implements MsgCom {
 class TestcaseTableMode implements TableModel {
     private TestcaseNode testcase = null;
     private String[] fieldNames = {"testScriptPath", "runCmd", "runTimeout",
-            "passCheckPattern", "curStatus"};
-    private String[] fieldDescs = {"脚本路径(只读)",  "脚本运行命令",  "脚本执行超时时间", "脚本执行成功日志样式", "脚本当前状态(只读)"};
+            "passCheckPattern", "curStatus", "failRunTimes"};
+    private String[] fieldDescs = {"脚本路径(只读)",  "脚本运行命令",  "脚本执行超时时间", "脚本执行成功日志样式", "脚本当前状态(只读)",
+    "失败重试次数"};
 
     private String[] columns = {"配置项名", "配置项值", "配置说明"};
 
@@ -126,6 +127,10 @@ class TestcaseTableMode implements TableModel {
             {
                 rspObj =  testcase.getStatus();
             }
+            else if(fieldName.equals("failRunTimes"))
+            {
+                rspObj = testcase.getFailRetryTimes();
+            }
             else
             {
                 rspObj = null;
@@ -157,6 +162,10 @@ class TestcaseTableMode implements TableModel {
         else if(fieldName.equals("passCheckPattern"))
         {
             testcase.setCheckPartten((String)aValue);
+        }
+        else if(fieldName.equals("failRunTimes"))
+        {
+            testcase.setFailRetryTimes(Integer.valueOf((String)aValue));
         }
         else
         {
